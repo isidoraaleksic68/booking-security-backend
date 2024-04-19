@@ -39,12 +39,16 @@ public class KeyStoreService {
         String keyStorePassword = getKeyStorePassword(alias);
 
         Certificate[] certificatesChain = keyStoreReader.getCertificateChain(KEYSTORE_PATH, keyStorePassword, issuerAlias);
-        Certificate[] newCertificateChain = new Certificate[certificatesChain.length + 1];
+        Certificate[] newCertificateChain;
 
         if (certificatesChain.length == 0) {
             Certificate rootCertificate = keyStoreReader.readCertificate(KEYSTORE_PATH, keyStorePassword, issuerAlias);
+            if (rootCertificate == null) {
+                throw new Exception("Issuer certificate not found in KeyStore");
+            }
             newCertificateChain = new Certificate[]{rootCertificate, certificate};
         } else {
+            newCertificateChain = new Certificate[certificatesChain.length + 1];
             System.arraycopy(certificatesChain, 0, newCertificateChain, 0, certificatesChain.length);
             newCertificateChain[newCertificateChain.length - 1] = certificate;
         }
@@ -53,6 +57,7 @@ public class KeyStoreService {
         keyStoreWriter.writeCertificateChain(alias, newCertificateChain);
         keyStoreWriter.saveKeyStore(KEYSTORE_PATH, keyStorePassword.toCharArray());
     }
+
     //GET CERT na osnovu user alias-a
     public Certificate getCertificate(String alias) throws IOException {
         return keyStoreReader.readCertificate(KEYSTORE_PATH, getKeyStorePassword(alias), alias);
