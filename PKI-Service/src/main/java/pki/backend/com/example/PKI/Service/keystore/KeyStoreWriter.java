@@ -74,6 +74,7 @@ public class KeyStoreWriter {
     public void write(String alias, PrivateKey privateKey, char[] password, Certificate[] certificateChain) {
         try {
             keyStore.setKeyEntry(alias, privateKey, password, certificateChain);
+
         } catch (KeyStoreException e) {
             e.printStackTrace();
         }
