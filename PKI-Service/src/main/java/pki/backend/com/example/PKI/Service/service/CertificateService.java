@@ -3,7 +3,7 @@ package pki.backend.com.example.PKI.Service.service;
 public class CertificateService {
 
     //TODO: Funkcije za kreirati
-    // createRootCert()
+    // createRootCertificate()
     // createIntermediateOrEECertificate()
     // getCertificateByAlias()
     // isCertificateValid()
