@@ -18,41 +18,72 @@ public class KeyStoreService {
     private final String KEYSTORE_PATH = "src/main/resources/static/RootKeyStore.jks";
     private final String PEM_FILE_PATH = "src/main/resources/static/user_credentials.pem";
 
+
+
     private KeyStoreWriter keyStoreWriter;
     private KeyStoreReader keyStoreReader;
 
     public KeyStoreService() {}
 
     //TODO: IZMENI WRITE FUNKCIJU, NEMA CUVANJA PRIVATE KEY-A I KEYSTORE PASSWORDA U ISTOM FAJLU!
-    public void saveCertificate(String alias, PrivateKey privateKey, Certificate certificate){
-        String KEYSTORE_PASSWORD=getKeyStorePassword(alias);
+    public void saveCertificateToJKS(String alias, Certificate certificate) throws Exception {
+        String keyStorePassword = getKeyStorePassword(alias);
 
-        keyStoreWriter.loadKeyStore(KEYSTORE_PATH, KEYSTORE_PASSWORD.toCharArray());
-        keyStoreWriter.write(alias, privateKey, KEYSTORE_PASSWORD.toCharArray(), new Certificate[] { certificate } );
-        keyStoreWriter.saveKeyStore(KEYSTORE_PATH, KEYSTORE_PASSWORD.toCharArray());
-
+        keyStoreWriter.loadKeyStore(KEYSTORE_PATH, keyStorePassword.toCharArray());
+        keyStoreWriter.writeCertificate(alias, certificate);
+        keyStoreWriter.saveKeyStore(KEYSTORE_PATH, keyStorePassword.toCharArray());
     }
 
-    //TODO: SAVE TO .JKS! [chain of responsibility, alias, cert]
+    //TODO: SAVE TO .JKS! [chain of responsibility, alias, cert], izmeni da ne radi sa private keyem
+    public void saveCertificate(String alias, Certificate certificate, String issuerAlias) throws Exception {
+        String keyStorePassword = getKeyStorePassword(alias);
 
+        Certificate[] certificatesChain = keyStoreReader.getCertificateChain(KEYSTORE_PATH, keyStorePassword, issuerAlias);
+        Certificate[] newCertificateChain = new Certificate[certificatesChain.length + 1];
+
+        if (certificatesChain.length == 0) {
+            Certificate rootCertificate = keyStoreReader.readCertificate(KEYSTORE_PATH, keyStorePassword, issuerAlias);
+            newCertificateChain = new Certificate[]{rootCertificate, certificate};
+        } else {
+            System.arraycopy(certificatesChain, 0, newCertificateChain, 0, certificatesChain.length);
+            newCertificateChain[newCertificateChain.length - 1] = certificate;
+        }
+
+        keyStoreWriter.loadKeyStore(KEYSTORE_PATH, keyStorePassword.toCharArray());
+        keyStoreWriter.writeCertificateChain(alias, newCertificateChain);
+        keyStoreWriter.saveKeyStore(KEYSTORE_PATH, keyStorePassword.toCharArray());
+    }
     //GET CERT na osnovu user alias-a
-    public Certificate getCertificate(String alias){
+    public Certificate getCertificate(String alias) throws IOException {
         return keyStoreReader.readCertificate(KEYSTORE_PATH, getKeyStorePassword(alias), alias);
     }
 
     //TODO: GET KeyStorePass na osnovu alias-a
 
-    public String getKeyStorePassword(String alias){
-        String keyPass="";
-        return keyPass;
+    // Load KeyStore password from PEM file based on alias
+    public String getKeyStorePassword(String alias) throws IOException {
+        // Load PEM file content and extract encryptedKeyStorePassword
+        String pemContent = loadPemFileContent();
+        String[] parts = pemContent.split(":");
+        if (parts.length != 3 || !parts[0].equals(alias)) {
+            throw new IllegalArgumentException("Invalid credentials for alias: " + alias);
+        }
+        return decrypt(parts[2]);
     }
-
     //TODO: GET PrivateKey na osnovu alias-a
-    public String getPrivateKey(String alias){
-        String privateKey="";
-        return privateKey;
-    }
+    // Load private key from PEM file based on alias
+    public PrivateKey getPrivateKey(String alias) throws IOException {
+        // Load PEM file content and extract encryptedPrivateKey
+        String pemContent = loadPemFileContent();
+        String[] parts = pemContent.split(":");
+        if (parts.length != 3 || !parts[0].equals(alias)) {
+            throw new IllegalArgumentException("Invalid credentials for alias: " + alias);
+        }
+        String encryptedPrivateKey = parts[1];
 
+        // Decrypt encryptedPrivateKey
+        return decrypt(encryptedPrivateKey);
+    }
     //TODO: Provera da li user ima prava pristupa --> ako njegov alias, se poklapa sa aliasom u pem-u da
 
     public Boolean doesUserHaveRights(String alias){
@@ -64,7 +95,7 @@ public class KeyStoreService {
     // kako bi se pristupilo keyPass-u i
     // iscitao sertifikat tj. pozvala getCertificate funkcija
 
-    public Certificate getUserCertificate(String alias){
+    public Certificate getUserCertificate(String alias) throws IOException {
 
         if(doesUserHaveRights(alias)){
             return getCertificate(alias);
