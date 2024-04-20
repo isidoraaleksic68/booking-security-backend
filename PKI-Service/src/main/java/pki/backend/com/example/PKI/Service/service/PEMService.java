@@ -9,7 +9,7 @@ import java.nio.file.attribute.AclEntryPermission;
 import java.nio.file.attribute.AclEntryType;
 import java.nio.file.attribute.AclFileAttributeView;
 import java.nio.file.attribute.UserPrincipal;
-import java.util.List;
+import java.util.*;
 
 import javax.crypto.*;
 import javax.crypto.spec.PBEKeySpec;
@@ -19,8 +19,6 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
-import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 
 public class PEMService {
@@ -33,31 +31,25 @@ public class PEMService {
 
     public PEMService(){}
 
-    public void setACL(){
+    public void setACL() throws IOException {
 
         Path path = Paths.get(PEM_FILE_PATH);
 
-        // Kreiranje novog ACL unosa za korisnika "username" koji dozvoljava samo čitanje
-        UserPrincipal user = path.getFileSystem().getUserPrincipalLookupService().lookupPrincipalByName("username");
+        // Create ACL for 'user'
+        UserPrincipal user = path.getFileSystem().getUserPrincipalLookupService().lookupPrincipalByName("Intel");
         AclEntry entry = AclEntry.newBuilder()
                 .setType(AclEntryType.ALLOW)
                 .setPrincipal(user)
-                .setPermissions(AclEntryPermission.READ_DATA)
+                .setPermissions(Set.of(AclEntryPermission.READ_DATA, AclEntryPermission.WRITE_DATA, AclEntryPermission.EXECUTE))
                 .build();
 
-        // Pribavljanje AclFileAttributeView za datoteku
-        AclFileAttributeView aclView = Files.getFileAttributeView(path, AclFileAttributeView.class);
 
-        // Dobijanje postojećih ACL unosa ako postoje
+        AclFileAttributeView aclView = Files.getFileAttributeView(path, AclFileAttributeView.class);
+        //get existing acl entries
         List<AclEntry> aclEntries = aclView.getAcl();
 
-        // Dodavanje novog ACL unosa u listu
         aclEntries.add(entry);
-
-        // Postavljanje novih ACL unosa na datoteku
         aclView.setAcl(aclEntries);
-
-        System.out.println("ACL uspešno postavljen na fajl.");
     }
 
     private void addKeyPassToPEM(String JKSPassBasic, String JKSPassPrivateKeys, List<Pair<String, String>> keyPasses) throws NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException, IOException {
