@@ -2,12 +2,17 @@ package pki.backend.com.example.PKI.Service.service;
 
 import pki.backend.com.example.PKI.Service.keystore.KeyStoreReader;
 import pki.backend.com.example.PKI.Service.keystore.KeyStoreWriter;
+import pki.backend.com.example.PKI.Service.model.CertificateGenerator;
+import pki.backend.com.example.PKI.Service.model.Issuer;
+import pki.backend.com.example.PKI.Service.model.Subject;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
+import java.util.Date;
 
 public class KeyStoreService {
 
@@ -22,11 +27,16 @@ public class KeyStoreService {
 
     private KeyStoreWriter keyStoreWriter;
     private KeyStoreReader keyStoreReader;
+    private CertificateGenerator certificateGenerator;
 
-    public KeyStoreService() {}
+
+    public KeyStoreService() {
+        this.certificateGenerator=new CertificateGenerator();
+    }
 
     //TODO: IZMENI WRITE FUNKCIJU, NEMA CUVANJA PRIVATE KEY-A I KEYSTORE PASSWORDA U ISTOM FAJLU!
-    public void saveCertificateToJKS(String alias, Certificate certificate) throws Exception {
+    public void saveCertificateToJKS(String alias, X509Certificate certificate) throws Exception {
+
         String keyStorePassword = getKeyStorePassword(alias);
 
         keyStoreWriter.loadKeyStore(KEYSTORE_PATH, keyStorePassword.toCharArray());
@@ -35,14 +45,14 @@ public class KeyStoreService {
     }
 
     //TODO: SAVE TO .JKS! [chain of responsibility, alias, cert], izmeni da ne radi sa private keyem
-    public void saveCertificate(String alias, Certificate certificate, String issuerAlias) throws Exception {
+    public void saveCertificate(String alias, X509Certificate certificate, String issuerAlias) throws Exception {
         String keyStorePassword = getKeyStorePassword(alias);
 
         Certificate[] certificatesChain = keyStoreReader.getCertificateChain(KEYSTORE_PATH, keyStorePassword, issuerAlias);
         Certificate[] newCertificateChain;
 
         if (certificatesChain.length == 0) {
-            Certificate rootCertificate = keyStoreReader.readCertificate(KEYSTORE_PATH, keyStorePassword, issuerAlias);
+            X509Certificate rootCertificate =(X509Certificate) keyStoreReader.readCertificate(KEYSTORE_PATH, keyStorePassword, issuerAlias);
             if (rootCertificate == null) {
                 throw new Exception("Issuer certificate not found in KeyStore");
             }
@@ -62,6 +72,12 @@ public class KeyStoreService {
     public Certificate getCertificate(String alias) throws IOException {
         return keyStoreReader.readCertificate(KEYSTORE_PATH, getKeyStorePassword(alias), alias);
     }
+
+    //Kreiraj mi novi sertifikat?????
+    public X509Certificate generateCertificate(Subject subject, Issuer issuer, Date startDate, Date endDate, String serialNumber) {
+        return certificateGenerator.generateCertificate(subject, issuer, startDate, endDate, serialNumber);
+    }
+
 
     //TODO: GET KeyStorePass na osnovu alias-a
 
