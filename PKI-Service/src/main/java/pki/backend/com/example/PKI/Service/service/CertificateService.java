@@ -19,7 +19,6 @@ public class CertificateService {
     // createIntermediate
     // createEECertificate()
     // isCertificateValid()
-    // saveCertificate()
     // generateKeyPair()
 
 
@@ -53,7 +52,6 @@ public class CertificateService {
 
         return certificate;
     }
-
 
 
 }
