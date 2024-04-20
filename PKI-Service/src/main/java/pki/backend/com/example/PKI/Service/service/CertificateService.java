@@ -14,6 +14,7 @@ public class CertificateService {
     KeyStoreReader kSReader;
     KeyStoreWriter kSWriter;
 
+
     //TODO: Funkcije za kreirati
     // createRootCert()
     // createIntermediate
