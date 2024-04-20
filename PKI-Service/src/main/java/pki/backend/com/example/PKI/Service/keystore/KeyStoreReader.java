@@ -13,6 +13,9 @@ import java.security.*;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
 
 @Component
 public class KeyStoreReader {
@@ -171,5 +174,65 @@ public class KeyStoreReader {
             e.printStackTrace();
         }
         return null;
+    }
+
+    /**
+     * Retrieves a certificate from the KeyStore based on its serial number.
+     *
+     * @param keyStoreFile Path to the KeyStore file
+     * @param keyStorePass Password for the KeyStore
+     * @param serialNumber Serial number of the certificate to retrieve
+     * @return The X509Certificate corresponding to the provided serial number, or null if not found
+     */
+    public X509Certificate getCertificateBySerialNumber(String keyStoreFile, String keyStorePass, String serialNumber) {
+        try {
+            KeyStore ks = KeyStore.getInstance("JKS", "SUN");
+            BufferedInputStream in = new BufferedInputStream(new FileInputStream(keyStoreFile));
+            ks.load(in, keyStorePass.toCharArray());
+
+            Enumeration<String> aliases = ks.aliases();
+            while (aliases.hasMoreElements()) {
+                String alias = aliases.nextElement();
+                Certificate cert = ks.getCertificate(alias);
+                if (cert instanceof X509Certificate) {
+                    X509Certificate x509Cert = (X509Certificate) cert;
+                    if (x509Cert.getSerialNumber().toString().equals(serialNumber)) {
+                        return x509Cert;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
+    /**
+     * Retrieves all certificates from the KeyStore.
+     *
+     * @param keyStoreFile Path to the KeyStore file
+     * @param keyStorePass Password for the KeyStore
+     * @return List of X509Certificate objects representing all certificates in the KeyStore
+     */
+    public List<X509Certificate> getAllCertificates(String keyStoreFile, String keyStorePass) {
+        List<X509Certificate> certificates = new ArrayList<>();
+        try {
+            KeyStore ks = KeyStore.getInstance("JKS", "SUN");
+            BufferedInputStream in = new BufferedInputStream(new FileInputStream(keyStoreFile));
+            ks.load(in, keyStorePass.toCharArray());
+
+            Enumeration<String> aliases = ks.aliases();
+            while (aliases.hasMoreElements()) {
+                String alias = aliases.nextElement();
+                Certificate cert = ks.getCertificate(alias);
+                if (cert instanceof X509Certificate) {
+                    certificates.add((X509Certificate) cert);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return certificates;
     }
 }

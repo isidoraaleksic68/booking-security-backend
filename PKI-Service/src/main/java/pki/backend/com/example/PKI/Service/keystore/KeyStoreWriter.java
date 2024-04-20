@@ -79,4 +79,20 @@ public class KeyStoreWriter {
             e.printStackTrace();
         }
     }
+
+    public void writeCertificateChain(String alias, Certificate[] chain) throws Exception {
+        try {
+            keyStore.setKeyEntry(alias, null, null, chain);
+        } catch (Exception e) {
+            throw new Exception("Failed to write certificate chain to KeyStore", e);
+        }
+    }
+
+    public void writeCertificate(String alias, Certificate certificate) throws Exception {
+        try {
+            keyStore.setCertificateEntry(alias, certificate);
+        } catch (Exception e) {
+            throw new Exception("Failed to write certificate to KeyStore", e);
+        }
+    }
 }
