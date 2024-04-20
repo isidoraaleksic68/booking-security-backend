@@ -5,14 +5,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.*;
-
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 
-@Table(name = "users")
+@Table(name = "certificate_users")
 
 public class User {
 
@@ -51,8 +48,8 @@ public class User {
     @NotNull
     @Column(name = "password", unique = true)
     private String password;
-    @Column(name = "certificatesSerialNumbers", unique = false)
-    private ArrayList<String> certificatesSerialNumbers;
+    @Column(name = "aliases", unique = false)
+    private ArrayList<String> aliases;
 
     public User(String id, String commonName, String surname, String givenName, String organization, String organizationUnit,
                 String country, String email, String password, ArrayList<String> certificatesSerialNumbers) {
@@ -65,7 +62,7 @@ public class User {
         this.country = country;
         this.email = email;
         this.password = password;
-        this.certificatesSerialNumbers = certificatesSerialNumbers;
+        this.aliases = certificatesSerialNumbers;
     }
 
     public User() {
@@ -143,11 +140,11 @@ public class User {
         this.password = password;
     }
 
-    public ArrayList<String> getCertificatesSerialNumbers() {
-        return certificatesSerialNumbers;
+    public ArrayList<String> getAliases() {
+        return aliases;
     }
 
-    public void setCertificatesSerialNumbers(ArrayList<String> certificatesSerialNumbers) {
-        this.certificatesSerialNumbers = certificatesSerialNumbers;
+    public void setAliases(ArrayList<String> aliases) {
+        this.aliases = aliases;
     }
 }
