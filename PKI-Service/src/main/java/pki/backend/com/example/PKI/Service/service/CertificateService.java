@@ -55,6 +55,9 @@ public class CertificateService {
 
 
     //TODO: implementiraj getAll i getBySubjectEmail!!!!!
+    // 1. ---> izvuci  all certs iz .jks
+    // 2. ---> izvuci certs iz .jks, idi kroz certs, proveri poklapanje subjecta, dodaj u listu i vrati
+
     public ArrayList<Certificate> getAll(){
         return new ArrayList<>();
     }
