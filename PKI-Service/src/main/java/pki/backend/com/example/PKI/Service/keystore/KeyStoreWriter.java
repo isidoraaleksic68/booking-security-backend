@@ -10,6 +10,7 @@ import java.security.*;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
+import java.time.LocalDateTime;
 
 
 @Component
@@ -71,22 +72,23 @@ public class KeyStoreWriter {
         }
     }
 
-    public void write(String alias, PrivateKey privateKey, char[] password, Certificate[] certificateChain) {
-        try {
-            keyStore.setKeyEntry(alias, privateKey, password, certificateChain);
-
-        } catch (KeyStoreException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void writeCertificateChain(String alias, Certificate[] chain) throws Exception {
-        try {
-            keyStore.setKeyEntry(alias, null, null, chain);
-        } catch (Exception e) {
-            throw new Exception("Failed to write certificate chain to KeyStore", e);
-        }
-    }
+    //WARNING: DO NOT USE
+//    public void write(String alias, PrivateKey privateKey, char[] password, Certificate[] certificateChain) {
+//        try {
+//            keyStore.setKeyEntry(alias, privateKey, password, certificateChain);
+//        } catch (KeyStoreException e) {
+//            e.printStackTrace();
+//        }
+//    }
+//
+//    //WARNING: DO NOT USE!
+//    public void writeCertificateChain(String alias, Certificate[] chain) throws Exception {
+//        try {
+//            keyStore.setKeyEntry(alias, null, null, chain);
+//        } catch (Exception e) {
+//            throw new Exception("Failed to write certificate chain to KeyStore", e);
+//        }
+//    }
 
     public void writeCertificate(String alias, Certificate certificate) throws Exception {
         try {
@@ -94,5 +96,11 @@ public class KeyStoreWriter {
         } catch (Exception e) {
             throw new Exception("Failed to write certificate to KeyStore", e);
         }
+    }
+
+    public String writePrivateKey(String alias, PrivateKey privateKey) throws Exception {
+        String newKeyPass = "nov:" + LocalDateTime.now().toString() + ":key:" + alias + ":pass";
+        keyStore.setKeyEntry(alias, privateKey, newKeyPass.toCharArray(), null);
+        return newKeyPass;
     }
 }
