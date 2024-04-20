@@ -2,11 +2,10 @@ package pki.backend.com.example.PKI.Service.service;
 
 import pki.backend.com.example.PKI.Service.keystore.KeyStoreReader;
 
-import java.math.BigInteger;
-
 import pki.backend.com.example.PKI.Service.keystore.KeyStoreWriter;
 import pki.backend.com.example.PKI.Service.model.Certificate;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 
 public class CertificateService {
 
@@ -55,4 +54,12 @@ public class CertificateService {
     }
 
 
+    //TODO: implementiraj getAll i getBySubjectEmail!!!!!
+    public ArrayList<Certificate> getAll(){
+        return new ArrayList<>();
+    }
+
+    public ArrayList<Certificate> getBySubjectEmail(String email){
+        return new ArrayList<>();
+    }
 }
