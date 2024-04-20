@@ -1,13 +1,23 @@
 package pki.backend.com.example.PKI.Service.service;
 
+import org.javatuples.Pair;
 import pki.backend.com.example.PKI.Service.keystore.KeyStoreReader;
 import pki.backend.com.example.PKI.Service.keystore.KeyStoreWriter;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import javax.crypto.*;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.io.*;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.KeySpec;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.List;
 
 public class KeyStoreService {
 
@@ -16,7 +26,6 @@ public class KeyStoreService {
     // gde ako ima credential-s dobija pristup KeyStore-u (ACL impl)
     // S tim da s obzirom da se svi keyStore-ovi cuvaju na istom mestu, keyPass je u principu isti za sve
     private final String KEYSTORE_PATH = "src/main/resources/static/RootKeyStore.jks";
-    private final String PEM_FILE_PATH = "src/main/resources/static/user_credentials.pem";
 
     private KeyStoreWriter keyStoreWriter;
     private KeyStoreReader keyStoreReader;
@@ -73,45 +82,6 @@ public class KeyStoreService {
     }
 
 
-    //TODO: Cuvanje kredencijala u .pem-u
-    // Save private key and KeyStore password to PEM file
-    public void saveCredentials(String alias, PrivateKey privateKey, String keyStorePassword) throws IOException {
-        // Encrypt privateKey and keyStorePassword before saving to PEM file
-        String encryptedPrivateKey = encrypt(privateKey);
-        String encryptedKeyStorePassword = encrypt(keyStorePassword);
-
-        // Save alias, encryptedPrivateKey, and encryptedKeyStorePassword to PEM file
-        String pemContent = alias + ":" + encryptedPrivateKey + ":" + encryptedKeyStorePassword;
-        try (FileOutputStream fos = new FileOutputStream(PEM_FILE_PATH)) {
-            fos.write(pemContent.getBytes());
-        }
-    }
-
-    // Encrypt data (private key and password)
-    private String encrypt(Object data) {
-        // Implement encryption logic
-        // For now, return a placeholder
-        return "encrypted_" + data.toString();
-    }
-
-    // Decrypt data (private key and password)
-    private <T> T decrypt(String encryptedData) {
-        // Implement decryption logic
-        // For now, return a placeholder
-        return (T) encryptedData.replace("encrypted_", "");
-    }
-
-    // Load content of PEM file
-    private String loadPemFileContent() throws IOException {
-        StringBuilder content = new StringBuilder();
-        try (FileInputStream fis = new FileInputStream(PEM_FILE_PATH)) {
-            int data;
-            while ((data = fis.read()) != -1) {
-                content.append((char) data);
-            }
-        }
-        return content.toString();
-    }
 
 
 }
