@@ -108,7 +108,7 @@ public class CertificateController {
     }
 
     @PostMapping(value = "/createCertificate")
-    public ResponseEntity<Void> createICACertificate(@RequestBody CertificateDTO certificateDTO) {
+    public ResponseEntity<Void> createCertificate(@RequestBody CertificateDTO certificateDTO) {
         try {
             certificateService.createCertificate(certificateDTO);
             return ResponseEntity.status(HttpStatus.CREATED).build();
@@ -117,7 +117,7 @@ public class CertificateController {
         }
     }
 
-    @PostMapping(value = "submitCertificateRequest")
+    @PostMapping(value = "/submitCertificateRequest")
     public ResponseEntity<Void> createCertificateRequest(@RequestBody RequestDTO requestDTO) {
         certificateService.addCertificateCreationRequest(requestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).build();

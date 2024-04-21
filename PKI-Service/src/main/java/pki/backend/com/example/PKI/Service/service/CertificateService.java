@@ -66,8 +66,13 @@ public class CertificateService {
         X509Certificate x509newCert = certGen.generate(keyPair.getPrivate(), "BC");
         Certificate newCert = new Certificate(false, x509newCert);
         String newCertAlias = generateAlias(r.getOrganisationUnit());
-        //todo: po ekstenzijama odrediti da li je ICA ili je EE u pitanju, za sada sam ostavio da je ICA
-        keyStoreService.saveRootCertificate(newCertAlias, newCert.getX509Certificate(), keyPair.getPrivate());
+        //todo: po ekstenzijama odrediti da li je ICA ili je EE u pitanju, mislim da ide ovako ali treba proveriti sutra!
+        if (dto.isCA()) {
+            keyStoreService.saveRootCertificate(newCertAlias, newCert.getX509Certificate(), keyPair.getPrivate());
+        }
+        else {
+            keyStoreService.saveEndEntityCertificate(newCertAlias, newCert.getX509Certificate());
+        }
         return newCert.getX509Certificate();
     }
 

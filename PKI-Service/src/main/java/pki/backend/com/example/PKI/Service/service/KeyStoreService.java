@@ -53,7 +53,7 @@ public class KeyStoreService {
     //this one does not need to save private key, because it will generate new pair of keys every time it is needed,
     //because it doesnt sign anything and doesnt store anything permanent that would be encrypted or signed with
     //its keypair
-    public void saveEndEntityCertificate(String alias, X509Certificate certificate, String issuerAlias) throws Exception {
+    public void saveEndEntityCertificate(String alias, X509Certificate certificate) throws Exception {
         String basicKeyStorePassword = pemService.getBasicKeyStorePassword();
 
         //write new certificate
