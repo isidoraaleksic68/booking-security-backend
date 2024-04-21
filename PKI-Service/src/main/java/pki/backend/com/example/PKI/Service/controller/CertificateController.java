@@ -15,9 +15,7 @@ import javax.crypto.NoSuchPaddingException;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
-import java.util.ArrayList;
 import java.util.List;
 
 public class CertificateController {
@@ -51,9 +49,17 @@ public class CertificateController {
     @GetMapping(value = "/getAllCertificates", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<CertificateDTO>> getAllCertificates() throws NoSuchPaddingException, IllegalBlockSizeException, IOException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException { //pitanje da li ovde vracamo DTO ili mozda
                                                                             //ipak posto su sertifikati da vracamo ceo obj
-        List<CertificateDTO> certificateDtos = certificateService.getAll();
+        List<CertificateDTO> certificateDtos = certificateService.getAllCertificates();
 
         return new ResponseEntity<>(certificateDtos, HttpStatus.OK);
+    }
+
+    @GetMapping(value = "/getAllRequests", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<RequestDTO>> getAllRequests() throws NoSuchPaddingException, IllegalBlockSizeException, IOException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException { //pitanje da li ovde vracamo DTO ili mozda
+                                                                            //ipak posto su sertifikati da vracamo ceo obj
+        List<RequestDTO> requestDTOS = certificateService.getAllRequests();
+
+        return new ResponseEntity<>(requestDTOS, HttpStatus.OK);
     }
 
 //    //TODO: IZMENI DA VRACA CERTIFICATE DTO!

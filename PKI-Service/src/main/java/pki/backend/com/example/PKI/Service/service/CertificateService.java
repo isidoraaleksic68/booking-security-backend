@@ -100,6 +100,15 @@ public class CertificateService {
         return dtos;
     }
 
+    public List<RequestDTO> getAllRequests() throws NoSuchPaddingException, IllegalBlockSizeException, IOException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
+        List<Request> requests = requestRepository.findAll();
+        List<RequestDTO> dtos = new ArrayList<>();
+        for (Request request : requests) {
+            dtos.add(new RequestDTO(request));
+        }
+        return dtos;
+    }
+
 
 //    public void revokeCertificate(String serialNumber, String ksFilePath,String password){
 //
