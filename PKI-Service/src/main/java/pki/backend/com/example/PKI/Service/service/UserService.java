@@ -3,7 +3,7 @@ package pki.backend.com.example.PKI.Service.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pki.backend.com.example.PKI.Service.model.User;
-import pki.backend.com.example.PKI.Service.repository.UserRepository;
+import pki.backend.com.example.PKI.Service.repository.RequestRepository;
 
 import java.util.Optional;
 
@@ -11,7 +11,7 @@ import java.util.Optional;
 public class UserService {
 
     @Autowired
-    private UserRepository userRepo;
+    private RequestRepository userRepo;
 
     public User save(User user){
         return userRepo.save(user);

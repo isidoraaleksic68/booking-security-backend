@@ -79,7 +79,7 @@ public class KeyStoreReader {
     /**
      * Ucitava sertifikat is KS fajla
      */
-    public Certificate readCertificate(String keyStoreFile, String keyStorePass, String alias) {
+    public X509Certificate readCertificate(String keyStoreFile, String keyStorePass, String alias) {
         try {
             //kreiramo instancu KeyStore
             KeyStore ks = KeyStore.getInstance("JKS", "SUN");
@@ -89,7 +89,12 @@ public class KeyStoreReader {
 
             if(ks.isKeyEntry(alias)) {
                 Certificate cert = ks.getCertificate(alias);
-                return cert;
+                if (cert instanceof X509Certificate) {
+                    return (X509Certificate) cert;
+                } else {
+                    System.out.println("WRONG CERTIFICATE TYPE ERR: Certificate you tried to read is not of type: X509Certificate");
+                    return null;
+                }
             }else{
                 return null;
             }

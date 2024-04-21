@@ -32,7 +32,7 @@ public class KeyStoreService {
 
     //needs to save 'alias-certificate' in basic KeyStore and 'alias-private key of newly saved certificate'
     //in PK KeyStore [Private Key Key Store]
-    public void saveRootCertificate(String alias, X509Certificate certificate, String issuerAlias) throws Exception {
+    public void saveRootCertificate(String alias, X509Certificate certificate, PrivateKey privateKey) throws Exception {
         String basicKeyStorePassword = pemService.getBasicKeyStorePassword();
         String PKKeyStorePassword = pemService.getPrivateKeysKeyStorePassword();
 
@@ -55,7 +55,6 @@ public class KeyStoreService {
     //its keypair
     public void saveEndEntityCertificate(String alias, X509Certificate certificate, String issuerAlias) throws Exception {
         String basicKeyStorePassword = pemService.getBasicKeyStorePassword();
-        String PKKeyStorePassword = pemService.getPrivateKeysKeyStorePassword();
 
         //write new certificate
         keyStoreWriter.loadKeyStore(BASIC_KEYSTORE_PATH, basicKeyStorePassword.toCharArray());
@@ -64,7 +63,7 @@ public class KeyStoreService {
     }
 
     //get cert based on alias
-    public Certificate getCertificate(String alias) throws IOException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
+    public X509Certificate getCertificate(String alias) throws IOException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
         String basicKeyStorePassword = pemService.getBasicKeyStorePassword();
         return keyStoreReader.readCertificate(BASIC_KEYSTORE_PATH, basicKeyStorePassword, alias);
     }

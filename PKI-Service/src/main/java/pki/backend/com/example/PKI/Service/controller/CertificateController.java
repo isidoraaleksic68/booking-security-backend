@@ -3,10 +3,9 @@ package pki.backend.com.example.PKI.Service.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import pki.backend.com.example.PKI.Service.dto.CertificateDTO;
+import pki.backend.com.example.PKI.Service.dto.RequestDTO;
 import pki.backend.com.example.PKI.Service.model.Certificate;
 import pki.backend.com.example.PKI.Service.model.User;
 import pki.backend.com.example.PKI.Service.service.CertificateService;
@@ -106,6 +105,16 @@ public class CertificateController {
         }
 
         return new ResponseEntity(certificateDtos, HttpStatus.OK);
+    }
+
+    @PostMapping(value = "/createCertificate")
+    public ResponseEntity<Void> createICACertificate(@RequestBody CertificateDTO certificateDTO) {
+
+    }
+
+    @PostMapping(value = "submitCertificateRequest")
+    public ResponseEntity<Void> createCertificateRequest(@RequestBody RequestDTO requestDTO) {
+
     }
 }
 
