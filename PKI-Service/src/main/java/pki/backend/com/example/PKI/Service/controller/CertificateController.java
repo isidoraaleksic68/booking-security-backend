@@ -32,7 +32,7 @@ public class CertificateController {
 
     //TODO: IZMENI DA VRACA CERTIFICATE DTO!
     @GetMapping("/revoke/{userAlias}/{serialNumber}")
-    public ResponseEntity revokeCertificate(@PathVariable String userAlias, @PathVariable String serialNumber) {
+    public ResponseEntity<Void> revokeCertificate(@PathVariable String userAlias, @PathVariable String serialNumber) {
         String keyStorePassword = null;
         try {
             keyStorePassword = keyStoreService.getKeyStorePassword(userAlias);
@@ -119,7 +119,8 @@ public class CertificateController {
 
     @PostMapping(value = "submitCertificateRequest")
     public ResponseEntity<Void> createCertificateRequest(@RequestBody RequestDTO requestDTO) {
-
+        certificateService.addCertificateCreationRequest(requestDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 }
 

@@ -2,6 +2,7 @@ package pki.backend.com.example.PKI.Service.service;
 
 import org.bouncycastle.x509.X509V3CertificateGenerator;
 import pki.backend.com.example.PKI.Service.dto.CertificateDTO;
+import pki.backend.com.example.PKI.Service.dto.RequestDTO;
 import pki.backend.com.example.PKI.Service.keystore.KeyStoreReader;
 
 import pki.backend.com.example.PKI.Service.keystore.KeyStoreWriter;
@@ -70,10 +71,15 @@ public class CertificateService {
         return newCert.getX509Certificate();
     }
 
-    public KeyPair generateKeyPair() throws NoSuchAlgorithmException {
+    private KeyPair generateKeyPair() throws NoSuchAlgorithmException {
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
         keyPairGenerator.initialize(2048);
         return keyPairGenerator.generateKeyPair();
+    }
+
+    public void addCertificateCreationRequest(RequestDTO dto){
+        Request r = new Request(dto);
+        requestRepository.save(r);
     }
 
 

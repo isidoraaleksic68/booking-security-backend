@@ -6,6 +6,7 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import pki.backend.com.example.PKI.Service.dto.RequestDTO;
 
 
 import javax.validation.constraints.NotEmpty;
@@ -64,4 +65,16 @@ public class Request {
     @NotNull
     @Column(name = "isCRLS", unique = false)
     private boolean isCRLS;
+
+    public Request(RequestDTO dto){
+        this.email = dto.getEmail();
+        this.organisation = dto.getOrganisation();
+        this.organisationUnit = dto.getOrganisationUnit();
+        this.country = dto.getCountry();
+        this.isCA = dto.isCA();
+        this.isDS = dto.isDS();
+        this.isKE = dto.isKE();
+        this.isKCS = dto.isKCS();
+        this.isCRLS = dto.isCRLS();
+    }
 }
