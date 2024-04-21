@@ -20,6 +20,7 @@ import java.security.*;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class CertificateService {
@@ -44,6 +45,7 @@ public class CertificateService {
 
         X509V3CertificateGenerator certGen = new X509V3CertificateGenerator();
         certGen.setSerialNumber(new BigInteger(128, new SecureRandom()));
+        //todo: izvrsiti proveru oko njegovog trajanja i trajanja njegovog parenta
         certGen.setNotBefore(dto.transformToDate(dto.getStartDate()));
         certGen.setNotAfter(dto.transformToDate(dto.getEndDate()));
 
@@ -61,9 +63,10 @@ public class CertificateService {
         KeyPair keyPair = generateKeyPair();
 
         certGen.setSignatureAlgorithm("SHA256WithRSAEncryption");
+        certGen.setPublicKey(keyPair.getPublic());
 
         // Generisanje sertifikata
-        X509Certificate x509newCert = certGen.generate(keyPair.getPrivate(), "BC");
+        X509Certificate x509newCert = certGen.generate(keyStoreService.getPrivateKey(dto.getIssuer()), "BC");
         Certificate newCert = new Certificate(false, x509newCert);
         String newCertAlias = generateAlias(r.getOrganisationUnit());
         //todo: po ekstenzijama odrediti da li je ICA ili je EE u pitanju, mislim da ide ovako ali treba proveriti sutra!
@@ -107,7 +110,15 @@ public class CertificateService {
         return new Certificate(false,  keyStoreService.getCertificate(alias));
     }
 
-
+    public List<CertificateDTO> getAll() throws NoSuchPaddingException, IllegalBlockSizeException, IOException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
+        List<Certificate> temp = keyStoreService.getAllCertificates();
+        List<CertificateDTO> dtos = new ArrayList<>();
+        for (Certificate certificate : temp) {
+          CertificateDTO dto = new CertificateDTO(certificate);
+          dtos.add(dto);
+        }
+        return dtos;
+    }
 
 
 
@@ -124,9 +135,7 @@ public class CertificateService {
     // 1. ---> izvuci  all certs iz .jks
     // 2. ---> izvuci certs iz .jks, idi kroz certs, proveri poklapanje subjecta, dodaj u listu i vrati
 
-    public ArrayList<Certificate> getAll(){
-        return new ArrayList<>();
-    }
+
 
     public ArrayList<Certificate> getBySubjectEmail(String email){
         return new ArrayList<>();

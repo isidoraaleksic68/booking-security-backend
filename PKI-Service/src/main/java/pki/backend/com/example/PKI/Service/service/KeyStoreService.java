@@ -2,6 +2,7 @@ package pki.backend.com.example.PKI.Service.service;
 
 import pki.backend.com.example.PKI.Service.keystore.KeyStoreReader;
 import pki.backend.com.example.PKI.Service.keystore.KeyStoreWriter;
+import pki.backend.com.example.PKI.Service.model.Certificate;
 import pki.backend.com.example.PKI.Service.model.CertificateGenerator;
 import pki.backend.com.example.PKI.Service.model.Issuer;
 import pki.backend.com.example.PKI.Service.model.Subject;
@@ -11,10 +12,11 @@ import java.io.*;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
-import java.security.cert.Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class KeyStoreService {
 
@@ -76,6 +78,17 @@ public class KeyStoreService {
         return keyStoreReader.readPrivateKey(PRIVATE_KEY_KEYSTORE_PATH, PKKeyStorePassword, alias, KeyPass);
     }
 
+    public List<Certificate> getAllCertificates() throws NoSuchPaddingException, IllegalBlockSizeException, IOException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
+        String BasicKeyStorePassword = pemService.getBasicKeyStorePassword();
+        List<X509Certificate> temp = keyStoreReader.getAllCertificates(BASIC_KEYSTORE_PATH, BasicKeyStorePassword);
+        //todo: popravi ovo...radi za sada samo zbog toga sto nemam implementiran revoke, kad budem imao moracu ispraviti
+        // ovo verovatno u key store readeru
+        List<Certificate> certificates = new ArrayList<Certificate>();
+        for (X509Certificate c : temp){
+            certificates.add(new Certificate(false, c));
+        }
+        return certificates;
+    }
 
     //Kreiraj mi novi sertifikat?????
     //todo: sta sa ovim da radim???

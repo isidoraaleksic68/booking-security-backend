@@ -4,6 +4,7 @@ package pki.backend.com.example.PKI.Service.dto;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import pki.backend.com.example.PKI.Service.model.Certificate;
 
 import java.security.cert.X509Certificate;
 import java.text.ParseException;
@@ -38,6 +39,9 @@ public class CertificateDTO {
         }
         return null;
     }
+
+
+
 ///---------------------------------------------------------------------
 //    private BigInteger serialNumber;
 //    private String subjectEmail;
