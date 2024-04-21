@@ -6,11 +6,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pki.backend.com.example.PKI.Service.dto.CertificateDTO;
 import pki.backend.com.example.PKI.Service.dto.RequestDTO;
-import pki.backend.com.example.PKI.Service.model.Certificate;
-import pki.backend.com.example.PKI.Service.model.User;
 import pki.backend.com.example.PKI.Service.service.CertificateService;
 import pki.backend.com.example.PKI.Service.service.KeyStoreService;
-import pki.backend.com.example.PKI.Service.service.UserService;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -18,17 +15,13 @@ import javax.crypto.NoSuchPaddingException;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
-import java.util.ArrayList;
 import java.util.List;
 
 public class CertificateController {
 
     CertificateService certificateService = new CertificateService();
-    UserService userService=new UserService();
     KeyStoreService keyStoreService = new KeyStoreService();
-    public static String KEYSTORE_PATH = "";
 
     //TODO:
     // getAll()
@@ -56,79 +49,34 @@ public class CertificateController {
     @GetMapping(value = "/getAllCertificates", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<CertificateDTO>> getAllCertificates() throws NoSuchPaddingException, IllegalBlockSizeException, IOException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException { //pitanje da li ovde vracamo DTO ili mozda
                                                                             //ipak posto su sertifikati da vracamo ceo obj
-//        ArrayList<CertificateDTO> certificateDtos = new ArrayList<>();
-//        for (Certificate certificate : certificateService.getAll()) {
-//
-//            java.security.cert.Certificate check = null;
-//            try {
-//                check = keyStoreService.getCertificate(certificate.getSerialNumber().toString());
-//            } catch (IOException e) {
-//                throw new RuntimeException(e);
-//            }
-//            X509Certificate currCert = (X509Certificate) check;
-//
-//            if (!certificate.getRevoked() && currCert.getBasicConstraints() > -1 &&
-//                    certificate.getEndDate().getYear() - certificate.getStartDate().getYear() > 1) {
-//
-//                User user = userService.findByEmail(certificate.getSubjectEmail());
-//
-//                CertificateDTO c = new CertificateDTO(certificate);
-//                c.setCommonName(user.getCommonName());
-//                c.setOrganization(user.getOrganization());
-//                certificateDtos.add(c);
-//            }
-//        }
-        List<CertificateDTO> certificateDtos = certificateService.getAll();
+        List<CertificateDTO> certificateDtos = certificateService.getAllCertificates();
 
         return new ResponseEntity<>(certificateDtos, HttpStatus.OK);
     }
 
-    //TODO: IZMENI DA VRACA CERTIFICATE DTO!
-    @GetMapping("/revoke/{userAlias}/{serialNumber}")
-    public ResponseEntity<Void> revokeCertificate(@PathVariable String userAlias, @PathVariable String serialNumber) {
-        String keyStorePassword = null;
-        try {
-            keyStorePassword = keyStoreService.getKeyStorePassword(userAlias);
-            certificateService.revokeCertificate(KEYSTORE_PATH, serialNumber, keyStorePassword);
-            return new ResponseEntity(HttpStatus.OK);
+    @GetMapping(value = "/getAllRequests", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<RequestDTO>> getAllRequests() throws NoSuchPaddingException, IllegalBlockSizeException, IOException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException { //pitanje da li ovde vracamo DTO ili mozda
+                                                                            //ipak posto su sertifikati da vracamo ceo obj
+        List<RequestDTO> requestDTOS = certificateService.getAllRequests();
 
-        } catch (IOException e) {
-            return new ResponseEntity(HttpStatus.BAD_REQUEST);
-        }
-
+        return new ResponseEntity<>(requestDTOS, HttpStatus.OK);
     }
+
+//    //TODO: IZMENI DA VRACA CERTIFICATE DTO!
+//    @GetMapping("/revoke/{userAlias}/{serialNumber}")
+//    public ResponseEntity<Void> revokeCertificate(@PathVariable String userAlias, @PathVariable String serialNumber) {
+//        //ili alias ili ceo CERTDTO
+//        String keyStorePassword = null;
+//        try {
+//            keyStorePassword = keyStoreService.getKeyStorePassword(userAlias);
+//            certificateService.revokeCertificate(KEYSTORE_PATH, serialNumber, keyStorePassword);
+//            return new ResponseEntity(HttpStatus.OK);
+//
+//        } catch (IOException e) {
+//            return new ResponseEntity(HttpStatus.BAD_REQUEST);
+//        }
+//
+//    }
 }
 
 
-//@GetMapping(value = "/getAll/{email}", produces = MediaType.APPLICATION_JSON_VALUE)
-//    public ResponseEntity<ArrayList<CertificateDTO>> getAllCertificatesForAUser(@RequestParam(name = "email") String email) {
-//        User user = userService.findByEmail(email);
-//
-//        ArrayList<CertificateDTO> certificateDtos = new ArrayList<>();
-//        for (Certificate certificate : certificateService.getBySubjectEmail(email)) {
-//
-//            java.security.cert.Certificate check = null;
-//            try {
-//                check = keyStoreService.getCertificate(certificate.getSerialNumber().toString());
-//            } catch (IOException e) {
-//                throw new RuntimeException(e);
-//            }
-//            X509Certificate currCert = (X509Certificate)check;
-//
-//            if(!certificate.getRevoked() && currCert.getBasicConstraints() > -1 &&
-//                    certificate.getEndDate().getYear() - certificate.getStartDate().getYear() > 1 ) {
-//
-//                CertificateDTO c = new CertificateDTO(certificate);
-//
-//                c.setCommonName(user.getCommonName());
-//                c.setOrganization(user.getOrganization());
-//                User issuer = userService.findByEmail(c.getIssuerEmail());
-//                c.setIssuerCommonName(issuer.getCommonName());
-//                c.setIssuerOrganization(issuer.getOrganization());
-//
-//                certificateDtos.add(c);
-//            }
-//        }
-//
-//        return new ResponseEntity(certificateDtos, HttpStatus.OK);
-//    }

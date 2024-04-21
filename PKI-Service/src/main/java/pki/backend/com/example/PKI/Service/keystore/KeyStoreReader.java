@@ -3,7 +3,7 @@ package pki.backend.com.example.PKI.Service.keystore;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
 import org.springframework.stereotype.Component;
-import pki.backend.com.example.PKI.Service.model.Issuer;
+import pki.backend.com.example.PKI.Service.model.MyCertificate;
 
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
@@ -46,35 +46,35 @@ public class KeyStoreReader {
      * @param keyPass - lozinka koja je neophodna da se izvuce privatni kljuc
      * @return - podatke o izdavaocu i odgovarajuci privatni kljuc
      */
-    public Issuer readIssuerFromStore(String keyStoreFile, String alias, char[] password, char[] keyPass) {
-        try {
-            //Datoteka se ucitava
-            BufferedInputStream in = new BufferedInputStream(new FileInputStream(keyStoreFile));
-            keyStore.load(in, password);
-
-            //Iscitava se sertifikat koji ima dati alias
-            Certificate cert = keyStore.getCertificate(alias);
-
-            //Iscitava se privatni kljuc vezan za javni kljuc koji se nalazi na sertifikatu sa datim aliasom
-            PrivateKey privateKey = (PrivateKey) keyStore.getKey(alias, keyPass);
-
-            X500Name issuerName = new JcaX509CertificateHolder((X509Certificate) cert).getSubject();
-            return new Issuer(privateKey, cert.getPublicKey(), issuerName);
-        } catch (KeyStoreException e) {
-            e.printStackTrace();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (CertificateException e) {
-            e.printStackTrace();
-        } catch (UnrecoverableKeyException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
+//    public Issuer readIssuerFromStore(String keyStoreFile, String alias, char[] password, char[] keyPass) {
+//        try {
+//            //Datoteka se ucitava
+//            BufferedInputStream in = new BufferedInputStream(new FileInputStream(keyStoreFile));
+//            keyStore.load(in, password);
+//
+//            //Iscitava se sertifikat koji ima dati alias
+//            Certificate cert = keyStore.getCertificate(alias);
+//
+//            //Iscitava se privatni kljuc vezan za javni kljuc koji se nalazi na sertifikatu sa datim aliasom
+//            PrivateKey privateKey = (PrivateKey) keyStore.getKey(alias, keyPass);
+//
+//            X500Name issuerName = new JcaX509CertificateHolder((X509Certificate) cert).getSubject();
+//            return new Issuer(privateKey, cert.getPublicKey(), issuerName);
+//        } catch (KeyStoreException e) {
+//            e.printStackTrace();
+//        } catch (FileNotFoundException e) {
+//            e.printStackTrace();
+//        } catch (NoSuchAlgorithmException e) {
+//            e.printStackTrace();
+//        } catch (CertificateException e) {
+//            e.printStackTrace();
+//        } catch (UnrecoverableKeyException e) {
+//            e.printStackTrace();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//        return null;
+//    }
 
     /**
      * Ucitava sertifikat is KS fajla
@@ -220,8 +220,8 @@ public class KeyStoreReader {
      * @param keyStorePass Password for the KeyStore
      * @return List of X509Certificate objects representing all certificates in the KeyStore
      */
-    public List<X509Certificate> getAllCertificates(String keyStoreFile, String keyStorePass) {
-        List<X509Certificate> certificates = new ArrayList<>();
+    public List<MyCertificate> getAllCertificates(String keyStoreFile, String keyStorePass) {
+        List<MyCertificate>certificates = new ArrayList<>();
         try {
             KeyStore ks = KeyStore.getInstance("JKS", "SUN");
             BufferedInputStream in = new BufferedInputStream(new FileInputStream(keyStoreFile));
@@ -232,7 +232,11 @@ public class KeyStoreReader {
                 String alias = aliases.nextElement();
                 Certificate cert = ks.getCertificate(alias);
                 if (cert instanceof X509Certificate) {
-                    certificates.add((X509Certificate) cert);
+                    X509Certificate x509 = ((X509Certificate) cert);
+                    MyCertificate myCertificate = new MyCertificate();
+                    myCertificate.setAlias(alias);
+                    myCertificate.setX509Certificate(x509);
+                    certificates.add(myCertificate);
                 }
             }
         } catch (Exception e) {

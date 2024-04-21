@@ -4,7 +4,8 @@ package pki.backend.com.example.PKI.Service.dto;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import pki.backend.com.example.PKI.Service.model.Certificate;
+import pki.backend.com.example.PKI.Service.model.MyCertificate;
+import pki.backend.com.example.PKI.Service.service.CertificateUtils;
 
 import java.security.cert.X509Certificate;
 import java.text.ParseException;
@@ -19,11 +20,11 @@ public class CertificateDTO {
     private String startDate;
     private String endDate;
 //    private String type; //sta ce ovaj tip predstavljati??
-    private String subject;
+    private String subject; //cn od subjecta
     private String alias;   //ovo je nullable jer kad jos nije generisano je NULL!
     private boolean isRevoked;
     private String commonName;
-    private boolean isCA;
+    private boolean isCA;   //todo: jos ove ekstenzije poubacivati unutra...
     private boolean isDS;
     private boolean isKE;
     private boolean isKCS;
@@ -40,6 +41,17 @@ public class CertificateDTO {
         return null;
     }
 
+    public CertificateDTO(MyCertificate certificate){
+        //isuer alias je problematican sada....
+        this.startDate = certificate.getX509Certificate().getNotBefore().toString();
+        this.endDate = certificate.getX509Certificate().getNotAfter().toString();
+        this.subject = certificate.getAlias();
+        this.issuer = certificate.getX509Certificate().getIssuerX500Principal().getName("AL");
+        this.commonName = certificate.getX509Certificate().getSubjectX500Principal().getName();
+        this.isRevoked = CertificateUtils.byteArrayToBoolean(certificate.getX509Certificate().getExtensionValue("isRevoked"));
+
+
+    }
 
 
 ///---------------------------------------------------------------------
