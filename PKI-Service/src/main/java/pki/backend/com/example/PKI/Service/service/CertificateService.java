@@ -3,9 +3,7 @@ package pki.backend.com.example.PKI.Service.service;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
 import pki.backend.com.example.PKI.Service.dto.CertificateDTO;
 import pki.backend.com.example.PKI.Service.dto.RequestDTO;
-import pki.backend.com.example.PKI.Service.keystore.KeyStoreReader;
 
-import pki.backend.com.example.PKI.Service.keystore.KeyStoreWriter;
 import pki.backend.com.example.PKI.Service.model.MyCertificate;
 import pki.backend.com.example.PKI.Service.model.Request;
 import pki.backend.com.example.PKI.Service.repository.RequestRepository;
@@ -92,7 +90,7 @@ public class CertificateService {
     }
 
 
-    public List<CertificateDTO> getAll() throws NoSuchPaddingException, IllegalBlockSizeException, IOException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
+    public List<CertificateDTO> getAllCertificates() throws NoSuchPaddingException, IllegalBlockSizeException, IOException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
         List<MyCertificate> temp = keyStoreService.getAllCertificates();
         List<CertificateDTO> dtos = new ArrayList<>();
         for (MyCertificate certificate : temp) {
