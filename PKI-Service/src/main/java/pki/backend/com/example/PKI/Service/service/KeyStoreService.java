@@ -2,10 +2,7 @@ package pki.backend.com.example.PKI.Service.service;
 
 import pki.backend.com.example.PKI.Service.keystore.KeyStoreReader;
 import pki.backend.com.example.PKI.Service.keystore.KeyStoreWriter;
-import pki.backend.com.example.PKI.Service.model.Certificate;
-import pki.backend.com.example.PKI.Service.model.CertificateGenerator;
-import pki.backend.com.example.PKI.Service.model.Issuer;
-import pki.backend.com.example.PKI.Service.model.Subject;
+import pki.backend.com.example.PKI.Service.model.MyCertificate;
 
 import javax.crypto.*;
 import java.io.*;
@@ -14,8 +11,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 public class KeyStoreService {
@@ -25,11 +20,10 @@ public class KeyStoreService {
 
     private KeyStoreWriter keyStoreWriter;
     private KeyStoreReader keyStoreReader;
-    private CertificateGenerator certificateGenerator;
     private PEMService pemService;
 
     public KeyStoreService() {
-        this.certificateGenerator=new CertificateGenerator();
+//        this.certificateGenerator=new CertificateGenerator();
     }
 
     //needs to save 'alias-certificate' in basic KeyStore and 'alias-private key of newly saved certificate'
@@ -65,7 +59,7 @@ public class KeyStoreService {
     }
 
     //get cert based on alias
-    public X509Certificate getCertificate(String alias) throws IOException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
+    public X509Certificate getCertificateByAlias(String alias) throws IOException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
         String basicKeyStorePassword = pemService.getBasicKeyStorePassword();
         return keyStoreReader.readCertificate(BASIC_KEYSTORE_PATH, basicKeyStorePassword, alias);
     }
@@ -78,23 +72,12 @@ public class KeyStoreService {
         return keyStoreReader.readPrivateKey(PRIVATE_KEY_KEYSTORE_PATH, PKKeyStorePassword, alias, KeyPass);
     }
 
-    public List<Certificate> getAllCertificates() throws NoSuchPaddingException, IllegalBlockSizeException, IOException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
+    //get all certificates from .jks
+    public List<MyCertificate> getAllCertificates() throws NoSuchPaddingException, IllegalBlockSizeException, IOException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
         String BasicKeyStorePassword = pemService.getBasicKeyStorePassword();
-        List<X509Certificate> temp = keyStoreReader.getAllCertificates(BASIC_KEYSTORE_PATH, BasicKeyStorePassword);
-        //todo: popravi ovo...radi za sada samo zbog toga sto nemam implementiran revoke, kad budem imao moracu ispraviti
-        // ovo verovatno u key store readeru
-        List<Certificate> certificates = new ArrayList<Certificate>();
-        for (X509Certificate c : temp){
-            certificates.add(new Certificate(false, c));
-        }
-        return certificates;
+        return keyStoreReader.getAllCertificates(BASIC_KEYSTORE_PATH, BasicKeyStorePassword);
     }
 
-    //Kreiraj mi novi sertifikat?????
-    //todo: sta sa ovim da radim???
-    public X509Certificate generateCertificate(Subject subject, Issuer issuer, Date startDate, Date endDate, String serialNumber) {
-        return certificateGenerator.generateCertificate(subject, issuer, startDate, endDate, serialNumber);
-    }
 
 
 }

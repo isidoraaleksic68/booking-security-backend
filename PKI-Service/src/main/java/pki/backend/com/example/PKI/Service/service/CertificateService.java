@@ -6,7 +6,7 @@ import pki.backend.com.example.PKI.Service.dto.RequestDTO;
 import pki.backend.com.example.PKI.Service.keystore.KeyStoreReader;
 
 import pki.backend.com.example.PKI.Service.keystore.KeyStoreWriter;
-import pki.backend.com.example.PKI.Service.model.Certificate;
+import pki.backend.com.example.PKI.Service.model.MyCertificate;
 import pki.backend.com.example.PKI.Service.model.Request;
 import pki.backend.com.example.PKI.Service.repository.RequestRepository;
 
@@ -21,22 +21,19 @@ import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 public class CertificateService {
 
     //NOTE: getUser i getAll metode dodate u READER KLASU!
 
-    KeyStoreReader kSReader; //todo: ovo izmeniti, ova dva objekta ne treba da budu tu vec treba da imamo samo KeyStoreService
-    KeyStoreWriter kSWriter; //todo: ovo izmeniti, ova dva objekta ne treba da budu tu vec treba da imamo samo KeyStoreService
     RequestRepository requestRepository;
     KeyStoreService keyStoreService;
 
 
     //TODO: Funkcije za kreirati
     // createRootCert() --> ne treba
-    // createIntermediate
-    // createEECertificate()
+    // createIntermediate --> done
+    // createEECertificate() --> done
     // isCertificateValid()
     // generateKeyPair() --> done
 
@@ -45,30 +42,34 @@ public class CertificateService {
 
         X509V3CertificateGenerator certGen = new X509V3CertificateGenerator();
         certGen.setSerialNumber(new BigInteger(128, new SecureRandom()));
-        //todo: izvrsiti proveru oko njegovog trajanja i trajanja njegovog parenta
+        X509Certificate issuerCert = keyStoreService.getCertificateByAlias(dto.getIssuer());
+        if (! CertificateUtils.datesInRangeOfIssuer(dto.transformToDate(dto.getStartDate()), dto.transformToDate(dto.getEndDate()), issuerCert)){
+            return null;
+        }
         certGen.setNotBefore(dto.transformToDate(dto.getStartDate()));
         certGen.setNotAfter(dto.transformToDate(dto.getEndDate()));
 
         Request r = requestRepository.findById(dto.getRequestId());
         certGen.setSubjectDN(new X500Principal("CN=" + dto.getCommonName() + ", O=" + r.getOrganisation() + ", OU=" + r.getOrganisationUnit() + ", C=" + r.getCountry()));
 
-        Certificate issuer = getByAlias(dto.getIssuer());
-        X500Principal subjectPrincipal = issuer.getX509Certificate().getSubjectX500Principal();
-        String issuerOrganisation = subjectPrincipal.getName("O");
-        String issuerOrganisationUnit = subjectPrincipal.getName("OU");
-        String issuerCountry = subjectPrincipal.getName("C");
-        String issuerName = subjectPrincipal.getName("CN");
-        certGen.setIssuerDN(new X500Principal("CN=" + issuerName + ", O=" + issuerOrganisation + ", OU=" + issuerOrganisationUnit + ", C=" + issuerCountry));
-
+        X500Principal issuerX500Principal = issuerCert.getSubjectX500Principal();
+        String issuerOrganisation = issuerX500Principal.getName("O");
+        String issuerOrganisationUnit = issuerX500Principal.getName("OU");
+        String issuerCountry = issuerX500Principal.getName("C");
+        String issuerName = issuerX500Principal.getName("CN");
+        certGen.setIssuerDN(new X500Principal("CN=" + issuerName + ", O=" + issuerOrganisation + ", OU=" + issuerOrganisationUnit + ", C=" + issuerCountry + ", AL=" + dto.getIssuer()));
         KeyPair keyPair = generateKeyPair();
 
         certGen.setSignatureAlgorithm("SHA256WithRSAEncryption");
         certGen.setPublicKey(keyPair.getPublic());
 
-        // Generisanje sertifikata
+        certGen.addExtension("isRevoked", false, CertificateUtils.booleanToByteArray(false));
+        //todo: dodaj ostale ekstenzije....
+
+        // Generate certificate
         X509Certificate x509newCert = certGen.generate(keyStoreService.getPrivateKey(dto.getIssuer()), "BC");
-        Certificate newCert = new Certificate(false, x509newCert);
-        String newCertAlias = generateAlias(r.getOrganisationUnit());
+        MyCertificate newCert = new MyCertificate(false, x509newCert);
+        String newCertAlias = CertificateUtils.generateAlias(r.getOrganisationUnit());
         //todo: po ekstenzijama odrediti da li je ICA ili je EE u pitanju, mislim da ide ovako ali treba proveriti sutra!
         if (dto.isCA()) {
             keyStoreService.saveRootCertificate(newCertAlias, newCert.getX509Certificate(), keyPair.getPrivate());
@@ -91,29 +92,10 @@ public class CertificateService {
     }
 
 
-    public void revokeCertificate(String serialNumber, String ksFilePath,String password){
-
-        X509Certificate x509certificate = kSReader.getCertificateBySerialNumber(ksFilePath, password, serialNumber);
-        Certificate certificate=convertX509toCertClass(x509certificate);
-        certificate.setRevoked(true);
-
-        try {
-            kSWriter.writeCertificate(certificate.getIssuerEmail(), certificate.getX509Certificate());
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
-    }
-
-    public Certificate getByAlias(String alias) throws NoSuchPaddingException, IllegalBlockSizeException, IOException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
-        //todo: namestiti da se ovaj revoked ucitava...nekako kasnije
-        return new Certificate(false,  keyStoreService.getCertificate(alias));
-    }
-
     public List<CertificateDTO> getAll() throws NoSuchPaddingException, IllegalBlockSizeException, IOException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
-        List<Certificate> temp = keyStoreService.getAllCertificates();
+        List<MyCertificate> temp = keyStoreService.getAllCertificates();
         List<CertificateDTO> dtos = new ArrayList<>();
-        for (Certificate certificate : temp) {
+        for (MyCertificate certificate : temp) {
           CertificateDTO dto = new CertificateDTO(certificate);
           dtos.add(dto);
         }
@@ -121,23 +103,17 @@ public class CertificateService {
     }
 
 
-
-
-    public static String generateAlias(String companyName) {
-        UUID uuid = UUID.randomUUID();
-        return companyName.trim().replaceAll("\\s+", "").concat("-").concat(uuid.toString().replace("-", ""));
-    }
-
-
-
-
-    //TODO: implementiraj getAll i getBySubjectEmail!!!!!
-    // 1. ---> izvuci  all certs iz .jks
-    // 2. ---> izvuci certs iz .jks, idi kroz certs, proveri poklapanje subjecta, dodaj u listu i vrati
-
-
-
-    public ArrayList<Certificate> getBySubjectEmail(String email){
-        return new ArrayList<>();
-    }
+//    public void revokeCertificate(String serialNumber, String ksFilePath,String password){
+//
+//        X509Certificate x509certificate = kSReader.getCertificateBySerialNumber(ksFilePath, password, serialNumber);
+//        MyCertificate certificate=convertX509toCertClass(x509certificate);
+//        certificate.setRevoked(true);
+//
+//        try {
+//            kSWriter.writeCertificate(certificate.getIssuerEmail(), certificate.getX509Certificate());
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }
+//
+//    }
 }

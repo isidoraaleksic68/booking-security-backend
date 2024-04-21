@@ -4,6 +4,7 @@ import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
 import org.springframework.stereotype.Component;
 import pki.backend.com.example.PKI.Service.model.Issuer;
+import pki.backend.com.example.PKI.Service.model.MyCertificate;
 
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
@@ -220,8 +221,8 @@ public class KeyStoreReader {
      * @param keyStorePass Password for the KeyStore
      * @return List of X509Certificate objects representing all certificates in the KeyStore
      */
-    public List<X509Certificate> getAllCertificates(String keyStoreFile, String keyStorePass) {
-        List<X509Certificate> certificates = new ArrayList<>();
+    public List<MyCertificate> getAllCertificates(String keyStoreFile, String keyStorePass) {
+        List<MyCertificate>certificates = new ArrayList<>();
         try {
             KeyStore ks = KeyStore.getInstance("JKS", "SUN");
             BufferedInputStream in = new BufferedInputStream(new FileInputStream(keyStoreFile));
@@ -232,7 +233,11 @@ public class KeyStoreReader {
                 String alias = aliases.nextElement();
                 Certificate cert = ks.getCertificate(alias);
                 if (cert instanceof X509Certificate) {
-                    certificates.add((X509Certificate) cert);
+                    X509Certificate x509 = ((X509Certificate) cert);
+                    MyCertificate myCertificate = new MyCertificate();
+                    myCertificate.setAlias(alias);
+                    myCertificate.setX509Certificate(x509);
+                    certificates.add(myCertificate);
                 }
             }
         } catch (Exception e) {
