@@ -3,6 +3,7 @@ package pki.backend.com.example.PKI.Service.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import pki.backend.com.example.PKI.Service.dto.CertificateDTO;
 import pki.backend.com.example.PKI.Service.dto.RequestDTO;
@@ -18,6 +19,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.List;
 
+@Controller
+@RequestMapping("/api/certificates")
 public class CertificateController {
 
     CertificateService certificateService = new CertificateService();
@@ -30,7 +33,7 @@ public class CertificateController {
     // generateCertificate() ---> iCA, EE
 
 
-    @PostMapping(value = "/createCertificate")
+    @PostMapping(value = "/create")
     public ResponseEntity<Void> createCertificate(@RequestBody CertificateDTO certificateDTO) {
         try {
             certificateService.createCertificate(certificateDTO);
@@ -40,13 +43,13 @@ public class CertificateController {
         }
     }
 
-    @PostMapping(value = "/submitCertificateRequest")
+    @PostMapping(value = "/request/create")
     public ResponseEntity<Void> createCertificateRequest(@RequestBody RequestDTO requestDTO) {
         certificateService.addCertificateCreationRequest(requestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @GetMapping(value = "/getAllCertificates", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/all", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<CertificateDTO>> getAllCertificates() throws NoSuchPaddingException, IllegalBlockSizeException, IOException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException { //pitanje da li ovde vracamo DTO ili mozda
                                                                             //ipak posto su sertifikati da vracamo ceo obj
         List<CertificateDTO> certificateDtos = certificateService.getAllCertificates();
@@ -54,12 +57,20 @@ public class CertificateController {
         return new ResponseEntity<>(certificateDtos, HttpStatus.OK);
     }
 
-    @GetMapping(value = "/getAllRequests", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/request/all", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<RequestDTO>> getAllRequests() throws NoSuchPaddingException, IllegalBlockSizeException, IOException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException { //pitanje da li ovde vracamo DTO ili mozda
                                                                             //ipak posto su sertifikati da vracamo ceo obj
         List<RequestDTO> requestDTOS = certificateService.getAllRequests();
 
         return new ResponseEntity<>(requestDTOS, HttpStatus.OK);
+    }
+
+    @GetMapping(value = "/createRootCA", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Void> createRootCA() throws Exception { //pitanje da li ovde vracamo DTO ili mozda
+
+        certificateService.generateRootCertificate();
+
+        return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
 //    //TODO: IZMENI DA VRACA CERTIFICATE DTO!

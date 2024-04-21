@@ -1,5 +1,8 @@
 package pki.backend.com.example.PKI.Service.service;
 
+import lombok.NoArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import pki.backend.com.example.PKI.Service.keystore.KeyStoreReader;
 import pki.backend.com.example.PKI.Service.keystore.KeyStoreWriter;
 import pki.backend.com.example.PKI.Service.model.MyCertificate;
@@ -13,18 +16,20 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.cert.X509Certificate;
 import java.util.List;
 
+@NoArgsConstructor
+@Service
 public class KeyStoreService {
 
-    private final String BASIC_KEYSTORE_PATH = "src/main/resources/static/RootKeyStore.jks";
-    private final String PRIVATE_KEY_KEYSTORE_PATH = "src/main/resources/static/RootKeyStore.jks";
+    private final String BASIC_KEYSTORE_PATH = "src/main/resources/static/BasicKeyStore.jks";
+    private final String PRIVATE_KEY_KEYSTORE_PATH = "src/main/resources/static/PrivateKeyKeyStore.jks";
 
+    @Autowired
     private KeyStoreWriter keyStoreWriter;
+    @Autowired
     private KeyStoreReader keyStoreReader;
+    @Autowired
     private PEMService pemService;
 
-    public KeyStoreService() {
-//        this.certificateGenerator=new CertificateGenerator();
-    }
 
     //needs to save 'alias-certificate' in basic KeyStore and 'alias-private key of newly saved certificate'
     //in PK KeyStore [Private Key Key Store]

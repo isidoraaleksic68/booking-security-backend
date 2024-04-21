@@ -1,6 +1,9 @@
 package pki.backend.com.example.PKI.Service.service;
 
+import lombok.NoArgsConstructor;
 import org.javatuples.Pair;
+import org.springframework.stereotype.Service;
+
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.Files;
@@ -21,6 +24,8 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.util.List;
 
+@NoArgsConstructor
+@Service
 public class PEMService {
 
     private final String PEM_FILE_PATH = "src/main/resources/static/user_credentials.pem";
@@ -28,8 +33,6 @@ public class PEMService {
     public String getPEM_FILE_PATH(){
         return PEM_FILE_PATH;
     }
-
-    public PEMService(){}
 
     //todo:should be set up, in some moment like when creating file, but we should do that later, just call of this func
     public void setACL() throws IOException {
