@@ -11,6 +11,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import com.fasterxml.jackson.core.type.TypeReference;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x500.X500NameBuilder;
+import org.bouncycastle.asn1.x500.style.BCStyle;
 
 @NoArgsConstructor
 public class CertificateUtils {
@@ -41,5 +44,26 @@ public class CertificateUtils {
         return newStart.after(issuer.getNotBefore()) && issuer.getNotAfter().after(newEnd);
     }
 
+    public static X500Name createPerson(String commonName, String name, String lastName, String organisation, String organisationUnit,
+                                 String country){
+        X500NameBuilder builder = new X500NameBuilder(BCStyle.INSTANCE);
+        builder.addRDN(BCStyle.CN, commonName);
+        builder.addRDN(BCStyle.SURNAME, lastName);
+        builder.addRDN(BCStyle.GIVENNAME, name);
+        builder.addRDN(BCStyle.O, organisation);
+        builder.addRDN(BCStyle.OU, organisationUnit);
+        builder.addRDN(BCStyle.C, country);
+        return builder.build();
+    }
+
+    public static X500Name createOrganisation(String commonName, String organisation, String organisationUnit,
+                                 String country){
+        X500NameBuilder builder = new X500NameBuilder(BCStyle.INSTANCE);
+        builder.addRDN(BCStyle.CN, commonName);
+        builder.addRDN(BCStyle.O, organisation);
+        builder.addRDN(BCStyle.OU, organisationUnit);
+        builder.addRDN(BCStyle.C, country);
+        return builder.build();
+    }
 
 }

@@ -2,9 +2,25 @@ package pki.backend.com.example.PKI.Service.service;
 
 import lombok.NoArgsConstructor;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.cmc.CertificationRequest;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x509.*;
+import org.bouncycastle.asn1.x509.AuthorityKeyIdentifier;
+import org.bouncycastle.asn1.x509.BasicConstraints;
+import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.asn1.x509.Extensions;
 import org.bouncycastle.asn1.x509.ExtensionsGenerator;
+import org.bouncycastle.asn1.x509.GeneralName;
+import org.bouncycastle.asn1.x509.GeneralNames;
+import org.bouncycastle.asn1.x509.KeyUsage;
+import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
+import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.X509v1CertificateBuilder;
+import org.bouncycastle.cert.X509v3CertificateBuilder;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -12,10 +28,12 @@ import org.springframework.stereotype.Service;
 import pki.backend.com.example.PKI.Service.dto.CertificateDTO;
 import pki.backend.com.example.PKI.Service.dto.RequestDTO;
 
+import pki.backend.com.example.PKI.Service.model.CertificateData;
 import pki.backend.com.example.PKI.Service.model.MyCertificate;
 import pki.backend.com.example.PKI.Service.model.Request;
+import pki.backend.com.example.PKI.Service.repository.CertificateDataRepository;
 import pki.backend.com.example.PKI.Service.repository.RequestRepository;
-import org.bouncycastle.asn1.x509.Extension;
+
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
@@ -26,6 +44,7 @@ import java.security.*;
 import java.security.cert.X509Certificate;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 @NoArgsConstructor
@@ -40,12 +59,10 @@ public class CertificateService {
     @Autowired
     private KeyStoreService keyStoreService;
 
-//
-//    @Autowired
-//    public CertificateService(RequestRepository requestRepository, KeyStoreService keyStoreService){
-//        this.keyStoreService = keyStoreService;
-//        this.requestRepository = requestRepository;
-//    }
+    @Autowired
+    private CertificateDataRepository certificateDataRepository;
+
+
 
     //TODO: Funkcije za kreirati
     // createRootCert() --> ne treba
@@ -56,76 +73,41 @@ public class CertificateService {
 
 
     public X509Certificate createCertificate(CertificateDTO dto) throws Exception {
-
-        X509V3CertificateGenerator certGen = new X509V3CertificateGenerator();
-        certGen.setSerialNumber(new BigInteger(128, new SecureRandom()));
-        X509Certificate issuerCert = keyStoreService.getCertificateByAlias(dto.getIssuer());
-        if (! CertificateUtils.datesInRangeOfIssuer(dto.transformToDate(dto.getStartDate()), dto.transformToDate(dto.getEndDate()), issuerCert)){
-            return null;
-        }
-        certGen.setNotBefore(dto.transformToDate(dto.getStartDate()));
-        certGen.setNotAfter(dto.transformToDate(dto.getEndDate()));
-
-        Request r = requestRepository.findById(dto.getRequestId());
-        certGen.setSubjectDN(new X500Principal("CN=" + dto.getCommonName() + ", O=" + r.getOrganisation() + ", OU=" + r.getOrganisationUnit() + ", C=" + r.getCountry()));
-
-        X500Principal issuerX500Principal = issuerCert.getSubjectX500Principal();
-        String issuerOrganisation = issuerX500Principal.getName("O");
-        String issuerOrganisationUnit = issuerX500Principal.getName("OU");
-        String issuerCountry = issuerX500Principal.getName("C");
-        String issuerName = issuerX500Principal.getName("CN");
-        certGen.setIssuerDN(new X500Principal("CN=" + issuerName + ", O=" + issuerOrganisation + ", OU=" + issuerOrganisationUnit + ", C=" + issuerCountry));
         KeyPair keyPair = generateKeyPair();
+        Request request = requestRepository.findById(dto.getRequestId());
+        X509Certificate issuer = keyStoreService.getCertificateByAlias(dto.getIssuer());
+        CertificateData issuerData = certificateDataRepository.findBySubjectSerialNumber(issuer.getSerialNumber());
+        BigInteger serialNumber = new BigInteger(128, new SecureRandom());
+        // Prepare the X509CertificateBuilder
+        X509v3CertificateBuilder certBuilder = new X509v3CertificateBuilder(
+                CertificateUtils.createOrganisation(dto.getCommonName(), request.getOrganisation(),
+                        request.getOrganisationUnit(), request.getCountry()),  // issuer
+                serialNumber,                 // serial number
+                new Date(System.currentTimeMillis()), // validity start
+                new Date(System.currentTimeMillis() + 365 * 24 * 60 * 60 * 1000L), // validity end
+                CertificateUtils.createPerson(issuer.getSubjectX500Principal().getName(), null, null, null,
+                        null, null),            // subject
+                SubjectPublicKeyInfo.getInstance(keyPair.getPublic().getEncoded()) // subject public key
+        );
 
-        certGen.setSignatureAlgorithm("SHA256WithRSAEncryption");
-        certGen.setPublicKey(keyPair.getPublic());
+        addExtensionsToCertificate(certBuilder, dto, keyPair.getPublic());
 
-        ExtensionsGenerator extGen = new ExtensionsGenerator();
-        ASN1ObjectIdentifier customExtensionOIDIsRevoked = new ASN1ObjectIdentifier("1.2.3.4.1");
-        byte[] extensionValueIsRevoked = CertificateUtils.booleanToByteArray(false);
-        extGen.addExtension(customExtensionOIDIsRevoked, true, extensionValueIsRevoked);
+        // Create a ContentSigner to sign the certificate
+        ContentSigner contentSigner = new JcaContentSignerBuilder("SHA256withRSA").build(keyStoreService.getPrivateKey(issuerData.getSubjectAlias()));
 
-        ASN1ObjectIdentifier customExtensionOIDCA = new ASN1ObjectIdentifier("1.2.3.4.2");
-        byte[] extensionValueCA = CertificateUtils.booleanToByteArray(dto.isCA());
-        extGen.addExtension(customExtensionOIDCA, true, extensionValueCA);
+        String alias = CertificateUtils.generateAlias(request.getOrganisation());
+        // Build the certificate
+        X509Certificate newCert = new JcaX509CertificateConverter().getCertificate(certBuilder.build(contentSigner));
 
-        ASN1ObjectIdentifier customExtensionOIDDS = new ASN1ObjectIdentifier("1.2.3.4.3");
-        byte[] extensionValueDS = CertificateUtils.booleanToByteArray(false);
-        extGen.addExtension(customExtensionOIDDS, true, extensionValueDS);
-
-        ASN1ObjectIdentifier customExtensionOIDKE = new ASN1ObjectIdentifier("1.2.3.4.4");
-        byte[] extensionValueKE = CertificateUtils.booleanToByteArray(false);
-        extGen.addExtension(customExtensionOIDKE, true, extensionValueKE);
-
-        ASN1ObjectIdentifier customExtensionOIDKCS = new ASN1ObjectIdentifier("1.2.3.4.5");
-        byte[] extensionValueKCS = CertificateUtils.booleanToByteArray(false);
-        extGen.addExtension(customExtensionOIDKCS, true, extensionValueKCS);
-
-        ASN1ObjectIdentifier customExtensionOIDCRLS = new ASN1ObjectIdentifier("1.2.3.4.6");
-        byte[] extensionValueCRLS = CertificateUtils.booleanToByteArray(false);
-        extGen.addExtension(customExtensionOIDCRLS, true, extensionValueCRLS);
-
-        Extensions extensions = extGen.generate();
-
-        certGen.addExtension(customExtensionOIDIsRevoked, true, extensions.getExtension(customExtensionOIDIsRevoked).getEncoded());
-        certGen.addExtension(customExtensionOIDCA, true, extensions.getExtension(customExtensionOIDCA).getEncoded());
-        certGen.addExtension(customExtensionOIDDS, true, extensions.getExtension(customExtensionOIDDS).getEncoded());
-        certGen.addExtension(customExtensionOIDKE, true, extensions.getExtension(customExtensionOIDKE).getEncoded());
-        certGen.addExtension(customExtensionOIDKCS, true, extensions.getExtension(customExtensionOIDKCS).getEncoded());
-        certGen.addExtension(customExtensionOIDCRLS, true, extensions.getExtension(customExtensionOIDCRLS).getEncoded());
-
-        // Generate certificate
-        X509Certificate x509newCert = certGen.generate(keyStoreService.getPrivateKey(dto.getIssuer()), "BC");
-        MyCertificate newCert = new MyCertificate(false, x509newCert);
-        String newCertAlias = CertificateUtils.generateAlias(r.getOrganisationUnit());
-
-        if (dto.isCA()) {
-            keyStoreService.saveRootCertificate(false,newCertAlias, newCert.getX509Certificate(), keyPair.getPrivate());
+        if (dto.isCA()){
+            keyStoreService.saveRootCertificate(false, alias, newCert, keyPair.getPrivate());
+        } else {
+            keyStoreService.saveEndEntityCertificate(alias, newCert);
         }
-        else {
-            keyStoreService.saveEndEntityCertificate(newCertAlias, newCert.getX509Certificate());
-        }
-        return newCert.getX509Certificate();
+        CertificateData dataAboutSert = new CertificateData(alias, issuerData.getSubjectAlias(), serialNumber,
+                dto.isCA(), dto.isDS(), dto.isKE(), dto.isKCS(), dto.isCRLS(), false);
+        certificateDataRepository.save(dataAboutSert);
+        return newCert;
     }
 
     private KeyPair generateKeyPair() throws NoSuchAlgorithmException {
@@ -144,11 +126,13 @@ public class CertificateService {
         List<MyCertificate> temp = keyStoreService.getAllCertificates();
         List<CertificateDTO> dtos = new ArrayList<>();
         for (MyCertificate certificate : temp) {
-          CertificateDTO dto = new CertificateDTO(certificate);
+            CertificateData data = certificateDataRepository.findBySubjectSerialNumber(certificate.getX509Certificate().getSerialNumber());
+          CertificateDTO dto = new CertificateDTO(certificate, data);
           dtos.add(dto);
         }
         return dtos;
     }
+
 
     public List<RequestDTO> getAllRequests() throws NoSuchPaddingException, IllegalBlockSizeException, IOException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
         List<Request> requests = requestRepository.findAll();
@@ -159,65 +143,108 @@ public class CertificateService {
         return dtos;
     }
 
+
     public X509Certificate generateRootCertificate() throws Exception {
-        Security.addProvider(new BouncyCastleProvider());
         KeyPair keyPair = generateKeyPair();
-        // Set certificate attributes
-        String newCertAlias = CertificateUtils.generateAlias("RootCompanyEnterprise");
-        X500Principal issuer = new X500Principal("CN=RootCA, L=" + newCertAlias);
-        X500Principal subject = issuer; // Self-signed, so issuer and subject are the same
-        Date startDate = new Date(System.currentTimeMillis());
-        Date endDate = new Date(System.currentTimeMillis() + 365 * 24 * 60 * 60 * 1000); // Valid for 1 year
         BigInteger serialNumber = new BigInteger(128, new SecureRandom());
 
-        // Create certificate
-        X509V3CertificateGenerator certGen = new X509V3CertificateGenerator();
-        certGen.setSerialNumber(serialNumber);
-        certGen.setIssuerDN(issuer);
-        certGen.setNotBefore(startDate);
-        certGen.setNotAfter(endDate);
-        certGen.setSubjectDN(subject);
-        certGen.setPublicKey(keyPair.getPublic());
-        certGen.setSignatureAlgorithm("SHA256WithRSAEncryption");
+        X509v3CertificateBuilder certBuilder = new X509v3CertificateBuilder(
+                CertificateUtils.createOrganisation("Root CA", "My Root organisation enterprise",
+                                                    "Certificate issuer department", "SRB"),  // issuer
+                serialNumber,                 // serial number
+                new Date(System.currentTimeMillis()), // validity start
+                new Date(System.currentTimeMillis() + 365 * 24 * 60 * 60 * 1000L), // validity end
+                CertificateUtils.createOrganisation("Root CA", "My Root organisation enterprise",
+                        "Certificate issuer department", "SRB"),            // subject
+                SubjectPublicKeyInfo.getInstance(keyPair.getPublic().getEncoded()) // subject public key
+        );
 
-        ExtensionsGenerator extGen = new ExtensionsGenerator();
-        ASN1ObjectIdentifier customExtensionOIDIsRevoked = new ASN1ObjectIdentifier("1.2.3.4.1");
-        byte[] extensionValue = CertificateUtils.booleanToByteArray(false);
-        extGen.addExtension(customExtensionOIDIsRevoked, true, extensionValue);
+        BasicConstraints basicConstraints = new BasicConstraints(true);
 
-        ASN1ObjectIdentifier customExtensionOIDCA = new ASN1ObjectIdentifier("1.2.3.4.2");
-        byte[] extensionValueTrue = CertificateUtils.booleanToByteArray(true);
-        extGen.addExtension(customExtensionOIDCA, true, extensionValueTrue);
+        AuthorityKeyIdentifier a = new AuthorityKeyIdentifier(keyPair.getPublic().getEncoded());
+        certBuilder.addExtension(Extension.authorityKeyIdentifier, false, a);
 
-        ASN1ObjectIdentifier customExtensionOIDDS = new ASN1ObjectIdentifier("1.2.3.4.3");
-        extGen.addExtension(customExtensionOIDDS, true, extensionValue);
+        boolean[] certificateRole = new boolean[]{true, true, false, false, false};
 
-        ASN1ObjectIdentifier customExtensionOIDKE = new ASN1ObjectIdentifier("1.2.3.4.4");
-        extGen.addExtension(customExtensionOIDKE, true, extensionValue);
+        int roleValue = 0;
+        for (int i = 0; i < certificateRole.length; i++) {
+            if(certificateRole[i]){
+                roleValue |= (1 << i);
+            }
+        }
 
-        ASN1ObjectIdentifier customExtensionOIDKCS = new ASN1ObjectIdentifier("1.2.3.4.5");
-        extGen.addExtension(customExtensionOIDKCS, true, extensionValue);
+        KeyUsage roleUsage = new KeyUsage(roleValue);
+        byte[] PKID = makePublicKeyID(keyPair.getPublic().getEncoded());
+        certBuilder.addExtension(Extension.subjectKeyIdentifier, false, PKID);
 
-        ASN1ObjectIdentifier customExtensionOIDCRLS = new ASN1ObjectIdentifier("1.2.3.4.6");
-        extGen.addExtension(customExtensionOIDCRLS, true, extensionValue);
+        certBuilder.addExtension(Extension.keyUsage, true, roleUsage);
+        certBuilder.addExtension(Extension.basicConstraints, true, basicConstraints);
 
-        Extensions extensions = extGen.generate();
+        String alias = CertificateUtils.generateAlias("My Root organisation enterprise");
 
-        certGen.addExtension(customExtensionOIDIsRevoked, true, extensions.getExtension(customExtensionOIDIsRevoked).getEncoded());
-        certGen.addExtension(customExtensionOIDCA, true, extensions.getExtension(customExtensionOIDCA).getEncoded());
-        certGen.addExtension(customExtensionOIDDS, true, extensions.getExtension(customExtensionOIDDS).getEncoded());
-        certGen.addExtension(customExtensionOIDKE, true, extensions.getExtension(customExtensionOIDKE).getEncoded());
-        certGen.addExtension(customExtensionOIDKCS, true, extensions.getExtension(customExtensionOIDKCS).getEncoded());
-        certGen.addExtension(customExtensionOIDCRLS, true, extensions.getExtension(customExtensionOIDCRLS).getEncoded());
+        // Create a ContentSigner to sign the certificate
+        ContentSigner contentSigner = new JcaContentSignerBuilder("SHA256withRSA").build(keyPair.getPrivate());
 
-        // Sign the certificate
-        PrivateKey privateKey = keyPair.getPrivate();
-        X509Certificate cert = certGen.generate(privateKey,"BC");
-
-        keyStoreService.saveRootCertificate(true,newCertAlias, cert, keyPair.getPrivate());
-
-        return cert;
+        // Build the certificate
+        X509Certificate newCert = new JcaX509CertificateConverter().getCertificate(certBuilder.build(contentSigner));
+        keyStoreService.saveRootCertificate(true, alias, newCert, keyPair.getPrivate());
+        CertificateData dataAboutSert = new CertificateData(alias, alias, serialNumber, true, true,
+                false, false, false,false);
+        certificateDataRepository.save(dataAboutSert);
+        return newCert;
     }
+
+    public void addExtensionsToCertificate(X509v3CertificateBuilder  builder, CertificateDTO certificateDTO, PublicKey subjectPublicKey) throws NoSuchPaddingException, IllegalBlockSizeException, IOException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
+        BasicConstraints basicConstraints = new BasicConstraints(certificateDTO.isCA());
+
+        if (certificateDTO.isCA()){
+            AuthorityKeyIdentifier a = new AuthorityKeyIdentifier(keyStoreService.getCertificateByAlias(certificateDTO.getIssuer()).getPublicKey().getEncoded());
+            builder.addExtension(Extension.authorityKeyIdentifier, false, a);
+        }
+
+        if (!certificateDTO.isCA()){
+            GeneralName san = new GeneralName(GeneralName.dNSName, requestRepository.findById(certificateDTO.getRequestId()).getOrganisation());
+            GeneralNames sanNames = new GeneralNames(san);
+            builder.addExtension(org.bouncycastle.asn1.x509.Extension.subjectAlternativeName, false, sanNames);
+        }
+
+        boolean[] certificateRole = new boolean[5];
+        certificateRole[0] = certificateDTO.isCA();
+        certificateRole[1] = certificateDTO.isDS();
+        certificateRole[2] = certificateDTO.isKCS();
+        certificateRole[3] = certificateDTO.isKE();
+        certificateRole[4] = certificateDTO.isCRLS();
+
+        int roleValue = 0;
+        for (int i = 0; i < certificateRole.length; i++) {
+            if(certificateRole[i]){
+                roleValue |= (1 << i);
+            }
+        }
+
+        KeyUsage roleUsage = new KeyUsage(roleValue);
+        byte[] PKID = makePublicKeyID(subjectPublicKey.getEncoded());
+        builder.addExtension(Extension.subjectKeyIdentifier, false, PKID);
+
+        builder.addExtension(Extension.keyUsage, true, roleUsage);
+        builder.addExtension(Extension.basicConstraints, true, basicConstraints);
+    }
+
+    public static byte[] makePublicKeyID(byte[] publicKey)
+            throws NoSuchAlgorithmException {
+        MessageDigest digest = MessageDigest.getInstance("SHA-1");
+        byte[] hash = digest.digest(publicKey);
+        return Arrays.copyOfRange(hash, 0, 20);
+    }
+
+
+
+
+
+
+
+
+
 
 
 //    public void revokeCertificate(String serialNumber, String ksFilePath,String password){

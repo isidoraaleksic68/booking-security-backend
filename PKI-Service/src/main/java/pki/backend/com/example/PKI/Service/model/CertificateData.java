@@ -2,6 +2,9 @@ package pki.backend.com.example.PKI.Service.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.math.BigInteger;
 import java.util.HashMap;
@@ -9,8 +12,9 @@ import java.util.Map;
 
 @Entity
 @Table(name = "certificate_data")
-@AllArgsConstructor
-
+@NoArgsConstructor
+@Getter
+@Setter
 public class CertificateData {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,78 +29,20 @@ public class CertificateData {
     private Boolean isKCS;
     private Boolean isCRLS;
 
-    public CertificateData() {
 
-    }
-
-
-    public String getIssuerAlias() {
-            return issuerAlias;
-        }
-
-    public Boolean getRevoked() {
-        return isRevoked;
-    }
-
-    public void setRevoked(Boolean revoked) {
-        isRevoked = revoked;
-    }
-
-    public Boolean getCA() {
-        return isCA;
-    }
-
-    public void setCA(Boolean CA) {
-        isCA = CA;
-    }
-
-    public Boolean getDS() {
-        return isDS;
-    }
-
-    public void setDS(Boolean DS) {
-        isDS = DS;
-    }
-
-    public Boolean getKE() {
-        return isKE;
-    }
-
-    public void setKE(Boolean KE) {
-        isKE = KE;
-    }
-
-    public Boolean getKCS() {
-        return isKCS;
-    }
-
-    public void setKCS(Boolean KCS) {
-        isKCS = KCS;
-    }
-
-    public Boolean getCRLS() {
-        return isCRLS;
-    }
-
-    public void setCRLS(Boolean CRLS) {
-        isCRLS = CRLS;
-    }
-
-    public void setIssuerAlias(String issuerAlias) {
-            this.issuerAlias = issuerAlias;
-        }
-
-    public String getSubjectAlias() {
-        return subjectAlias;
-    }
-
-    public void setSubjectAlias(String subjectAlias) {
+    public CertificateData(String subjectAlias, String issuerAlias, BigInteger subjectSerialNumber, boolean isCA,
+                        boolean isDS, boolean isKE, boolean isKCS, boolean isCRLS, boolean isRevoked){
         this.subjectAlias = subjectAlias;
+        this.issuerAlias = issuerAlias;
+        this.subjectSerialNumber = subjectSerialNumber;
+        this.isCA = isCA;
+        this.isDS = isDS;
+        this.isKE = isKE;
+        this.isKCS = isKCS;
+        this.isCRLS = isCRLS;
+        this.isRevoked = isRevoked;
     }
 
-    public BigInteger getSubjectSerialNumber() {
-        return subjectSerialNumber;
-    }
 
     @Override
     public String toString() {
@@ -112,11 +58,4 @@ public class CertificateData {
                 ", isCRLS=" + isCRLS +
                 '}';
     }
-
-    public void setSubjectSerialNumber(BigInteger subjectSerialNumber) {
-            this.subjectSerialNumber = subjectSerialNumber;
-        }
-
-
-
 }

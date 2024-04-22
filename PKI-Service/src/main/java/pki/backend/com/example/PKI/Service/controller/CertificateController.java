@@ -28,11 +28,6 @@ public class CertificateController {
     @Autowired
     CertificateService certificateService;
 
-    //TODO:
-    // getAll()
-    // download()
-    // getAllUserCertificates() --> userAlias
-    // generateCertificate() ---> iCA, EE
 
 
     @PostMapping(value = "/create")
@@ -52,28 +47,48 @@ public class CertificateController {
     }
 
     @GetMapping(value = "/all", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<CertificateDTO>> getAllCertificates() throws NoSuchPaddingException, IllegalBlockSizeException, IOException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException { //pitanje da li ovde vracamo DTO ili mozda
-                                                                            //ipak posto su sertifikati da vracamo ceo obj
+    public ResponseEntity<List<CertificateDTO>> getAllCertificates() throws NoSuchPaddingException, IllegalBlockSizeException, IOException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
+
         List<CertificateDTO> certificateDtos = certificateService.getAllCertificates();
 
         return new ResponseEntity<>(certificateDtos, HttpStatus.OK);
     }
 
     @GetMapping(value = "/request/all", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<RequestDTO>> getAllRequests() throws NoSuchPaddingException, IllegalBlockSizeException, IOException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException { //pitanje da li ovde vracamo DTO ili mozda
-                                                                            //ipak posto su sertifikati da vracamo ceo obj
+    public ResponseEntity<List<RequestDTO>> getAllRequests() throws NoSuchPaddingException, IllegalBlockSizeException, IOException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
+
         List<RequestDTO> requestDTOS = certificateService.getAllRequests();
 
         return new ResponseEntity<>(requestDTOS, HttpStatus.OK);
     }
 
     @GetMapping(value = "/createRootCA", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> createRootCA() throws Exception { //pitanje da li ovde vracamo DTO ili mozda
+    public ResponseEntity<Void> createRootCA() throws Exception {
 
         certificateService.generateRootCertificate();
 
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 //    //TODO: IZMENI DA VRACA CERTIFICATE DTO!
 //    @GetMapping("/revoke/{userAlias}/{serialNumber}")

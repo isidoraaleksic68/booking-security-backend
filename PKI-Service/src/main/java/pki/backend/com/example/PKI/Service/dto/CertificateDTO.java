@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import pki.backend.com.example.PKI.Service.model.CertificateData;
 import pki.backend.com.example.PKI.Service.model.MyCertificate;
 import pki.backend.com.example.PKI.Service.service.CertificateUtils;
 
@@ -21,16 +22,29 @@ public class CertificateDTO {
     private String issuer;  //predstavljace issuer alias!
     private String startDate;
     private String endDate;
-//    private String type; //sta ce ovaj tip predstavljati??
     private String subject; //cn od subjecta
     private String alias;   //ovo je nullable jer kad jos nije generisano je NULL!
-    private boolean isRevoked;
     private String commonName;
-    private boolean isCA;   //todo: jos ove ekstenzije poubacivati unutra...
+    private boolean isRevoked;
+    private boolean isCA;
     private boolean isDS;
     private boolean isKE;
     private boolean isKCS;
     private boolean isCRLS;
+
+    public CertificateDTO(MyCertificate certificate, CertificateData certificateData){
+        this.issuer = certificateData.getIssuerAlias();
+        this.startDate = certificate.getX509Certificate().getNotBefore().toString();
+        this.endDate = certificate.getX509Certificate().getNotAfter().toString();
+        this.subject = certificate.getX509Certificate().getSubjectDN().getName();
+        this.alias = certificate.getAlias();
+        this.isRevoked = certificateData.getIsRevoked();
+        this.isCA = certificateData.getIsCA();
+        this.isDS = certificateData.getIsDS();
+        this.isKE = certificateData.getIsKE();
+        this.isKCS = certificateData.getIsKCS();
+        this.isCRLS = certificateData.getIsCRLS();
+    }
 
     public Date transformToDate(String dateStr){
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
@@ -41,29 +55,6 @@ public class CertificateDTO {
             e.printStackTrace();
         }
         return null;
-    }
-
-    public CertificateDTO(MyCertificate certificate){
-        //isuer alias je problematican sada....
-        this.startDate = certificate.getX509Certificate().getNotBefore().toString();
-        this.endDate = certificate.getX509Certificate().getNotAfter().toString();
-        this.subject = certificate.getAlias();
-        this.issuer = parseDN(certificate.getX509Certificate().getIssuerX500Principal().getName(),"L");
-        this.commonName = certificate.getX509Certificate().getSubjectX500Principal().getName();
-        this.isRevoked = CertificateUtils.byteArrayToBoolean(certificate.getX509Certificate().getExtensionValue("1.2.3.4.1"));
-
-
-    }
-
-    private String parseDN(String dn, String attribute) {
-        String[] parts = dn.split(",");
-        for (String part : parts) {
-            String[] keyValue = part.split("=");
-            if (keyValue.length == 2 && keyValue[0].trim().equalsIgnoreCase(attribute)) {
-                return keyValue[1].trim();
-            }
-        }
-        return null; // Attribute not found
     }
 
 ///---------------------------------------------------------------------
@@ -81,23 +72,5 @@ public class CertificateDTO {
 //    private String issuerCommonName;
 //    private String issuerOrganization;
 
-
-//    @Autowired
-//    private UserRepo userRepo;
-
-//    public CertificateDTO(X509Certificate certificate){
-//        this.serialNumber = certificate.getSerialNumber();
-//        this.subject = certificate.getSubjectX500Principal().getName();
-//        this.startDate = String.valueOf(certificate.getNotBefore());
-//        this.endDate = String.valueOf(certificate.getNotAfter());
-////        this.extendedKeyUsage = certificate.getExtendedKeyUsage();
-////        this.keyUsage = certificate.getKeyUsage();
-//        this.issuer = certificate.getIssuerX500Principal().getName();
-//        // OVE PARAMETRE IZVLACIMO IZ USER-A
-//        this.commonName = null;
-//        this.organization = null;
-//        this.issuerOrganization = null;
-//        this.issuerCommonName = null;
-//    }
 
 }
