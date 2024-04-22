@@ -154,24 +154,24 @@ public class CertificateService {
         certGen.setSignatureAlgorithm("SHA256WithRSAEncryption");
 
         ExtensionsGenerator extGen = new ExtensionsGenerator();
-        ASN1ObjectIdentifier customExtensionOID = new ASN1ObjectIdentifier("isRevoked");
+        ASN1ObjectIdentifier customExtensionOID = new ASN1ObjectIdentifier("1.2.3.4.1");
         byte[] extensionValue = CertificateUtils.booleanToByteArray(false);
         extGen.addExtension(customExtensionOID, true, extensionValue);
 
-        ASN1ObjectIdentifier customExtensionOIDCA = new ASN1ObjectIdentifier("isCA");
+        ASN1ObjectIdentifier customExtensionOIDCA = new ASN1ObjectIdentifier("1.2.3.4.2");
         byte[] extensionValueTrue = CertificateUtils.booleanToByteArray(true);
         extGen.addExtension(customExtensionOIDCA, true, extensionValueTrue);
 
-        ASN1ObjectIdentifier customExtensionOIDDS = new ASN1ObjectIdentifier("isDS");
+        ASN1ObjectIdentifier customExtensionOIDDS = new ASN1ObjectIdentifier("1.2.3.4.3");
         extGen.addExtension(customExtensionOIDDS, true, extensionValue);
 
-        ASN1ObjectIdentifier customExtensionOIDKE = new ASN1ObjectIdentifier("isKE");
+        ASN1ObjectIdentifier customExtensionOIDKE = new ASN1ObjectIdentifier("1.2.3.4.4");
         extGen.addExtension(customExtensionOIDKE, true, extensionValue);
 
-        ASN1ObjectIdentifier customExtensionOIDKCS = new ASN1ObjectIdentifier("isKCS");
+        ASN1ObjectIdentifier customExtensionOIDKCS = new ASN1ObjectIdentifier("1.2.3.4.5");
         extGen.addExtension(customExtensionOIDKCS, true, extensionValue);
 
-        ASN1ObjectIdentifier customExtensionOIDCRLS = new ASN1ObjectIdentifier("isCRLS");
+        ASN1ObjectIdentifier customExtensionOIDCRLS = new ASN1ObjectIdentifier("1.2.3.4.6");
         extGen.addExtension(customExtensionOIDCRLS, true, extensionValue);
 
         Extensions extensions = extGen.generate();

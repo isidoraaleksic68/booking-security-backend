@@ -4,9 +4,11 @@ package pki.backend.com.example.PKI.Service.dto;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import pki.backend.com.example.PKI.Service.model.MyCertificate;
 import pki.backend.com.example.PKI.Service.service.CertificateUtils;
 
+import java.security.cert.Extension;
 import java.security.cert.X509Certificate;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -48,7 +50,7 @@ public class CertificateDTO {
         this.subject = certificate.getAlias();
         this.issuer = parseDN(certificate.getX509Certificate().getIssuerX500Principal().getName(),"L");
         this.commonName = certificate.getX509Certificate().getSubjectX500Principal().getName();
-        this.isRevoked = CertificateUtils.byteArrayToBoolean(certificate.getX509Certificate().getExtensionValue("isRevoked"));
+        this.isRevoked = CertificateUtils.byteArrayToBoolean(certificate.getX509Certificate().getExtensionValue("1.2.3.4.1"));
 
 
     }
