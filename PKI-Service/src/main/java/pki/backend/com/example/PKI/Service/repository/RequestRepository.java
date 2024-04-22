@@ -14,4 +14,5 @@ public interface RequestRepository extends JpaRepository<Request, Integer> {
     Request findByEmail(String email);
     Request findById(int id);
     List<Request> findAll();
+    Request save(Request request);
 }

@@ -1,5 +1,6 @@
 package pki.backend.com.example.PKI.Service.keystore;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
@@ -105,6 +106,7 @@ public class KeyStoreWriter {
     }
 
     public String writePrivateKey(String alias, PrivateKey privateKey) throws Exception {
+        Security.addProvider(new BouncyCastleProvider());
         String newKeyPass = "nov" + LocalDateTime.now().toString() + "key" + alias + "pass";
         KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
         keyPairGenerator.initialize(2048);

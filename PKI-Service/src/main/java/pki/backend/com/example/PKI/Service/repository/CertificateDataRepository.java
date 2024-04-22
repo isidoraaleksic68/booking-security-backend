@@ -8,5 +8,7 @@ import java.math.BigInteger;
 
 @Repository
 public interface CertificateDataRepository extends JpaRepository<CertificateData, Long> {
+
+    CertificateData save(CertificateData certificateData);
     CertificateData findBySubjectSerialNumber(BigInteger serialNumber);
 }

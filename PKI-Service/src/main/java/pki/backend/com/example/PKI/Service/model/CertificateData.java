@@ -19,14 +19,32 @@ public class CertificateData {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "issuerAlias")
     private String issuerAlias;
+
+    @Column(name = "subjectAlias")
     private String subjectAlias;
+
+    @Column(name = "subjectSerialNumber")
     private BigInteger subjectSerialNumber;
+
+    @Column(name = "isRevoked")
     private Boolean isRevoked;
+
+    @Column(name = "isCA")
     private Boolean isCA;
+
+    @Column(name = "isDS")
     private Boolean isDS;
+
+    @Column(name = "isKE")
     private Boolean isKE;
+
+    @Column(name = "isKCS")
     private Boolean isKCS;
+
+    @Column(name = "isCRLS")
     private Boolean isCRLS;
 
 
