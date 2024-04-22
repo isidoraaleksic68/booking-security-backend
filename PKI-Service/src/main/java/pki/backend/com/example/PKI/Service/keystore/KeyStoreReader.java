@@ -2,6 +2,7 @@ package pki.backend.com.example.PKI.Service.keystore;
 
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import pki.backend.com.example.PKI.Service.model.MyCertificate;
 
@@ -24,6 +25,7 @@ public class KeyStoreReader {
     // - Sertifikati koji ukljucuju javni kljuc
     // - Privatni kljucevi
     // - Tajni kljucevi, koji se koriste u simetricnima siframa
+
     private KeyStore keyStore;
 
     public KeyStoreReader() {

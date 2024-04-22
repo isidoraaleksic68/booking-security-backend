@@ -1,5 +1,6 @@
 package pki.backend.com.example.PKI.Service.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -20,11 +21,12 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.List;
 
 @Controller
+@CrossOrigin(origins = "http://localhost:4200")
 @RequestMapping("/api/certificates")
 public class CertificateController {
 
-    CertificateService certificateService = new CertificateService();
-    KeyStoreService keyStoreService = new KeyStoreService();
+    @Autowired
+    CertificateService certificateService;
 
     //TODO:
     // getAll()

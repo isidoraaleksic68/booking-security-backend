@@ -46,13 +46,23 @@ public class CertificateDTO {
         this.startDate = certificate.getX509Certificate().getNotBefore().toString();
         this.endDate = certificate.getX509Certificate().getNotAfter().toString();
         this.subject = certificate.getAlias();
-        this.issuer = certificate.getX509Certificate().getIssuerX500Principal().getName("AL");
+        this.issuer = parseDN(certificate.getX509Certificate().getIssuerX500Principal().getName(),"L");
         this.commonName = certificate.getX509Certificate().getSubjectX500Principal().getName();
         this.isRevoked = CertificateUtils.byteArrayToBoolean(certificate.getX509Certificate().getExtensionValue("isRevoked"));
 
 
     }
 
+    private String parseDN(String dn, String attribute) {
+        String[] parts = dn.split(",");
+        for (String part : parts) {
+            String[] keyValue = part.split("=");
+            if (keyValue.length == 2 && keyValue[0].trim().equalsIgnoreCase(attribute)) {
+                return keyValue[1].trim();
+            }
+        }
+        return null; // Attribute not found
+    }
 
 ///---------------------------------------------------------------------
 //    private BigInteger serialNumber;

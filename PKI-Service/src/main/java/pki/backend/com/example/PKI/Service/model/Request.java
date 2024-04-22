@@ -1,6 +1,7 @@
 package pki.backend.com.example.PKI.Service.model;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Getter;
@@ -12,6 +13,7 @@ import pki.backend.com.example.PKI.Service.dto.RequestDTO;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
+@Entity
 @Table(name = "cert_request_table")
 @Getter
 @Setter
