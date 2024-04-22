@@ -1,7 +1,9 @@
 package pki.backend.com.example.PKI.Service.service;
 
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.javatuples.Pair;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.Path;
@@ -24,15 +26,12 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.util.List;
 
+
 @NoArgsConstructor
 @Service
 public class PEMService {
 
     private final String PEM_FILE_PATH = "src/main/resources/static/user_credentials.pem";
-
-    public String getPEM_FILE_PATH(){
-        return PEM_FILE_PATH;
-    }
 
     //todo:should be set up, in some moment like when creating file, but we should do that later, just call of this func
     public void setACL() throws IOException {
@@ -64,9 +63,9 @@ public class PEMService {
         for (Pair<String, String> pair : keyPasses) {
             String alias = pair.getValue0();
             String keyPass = pair.getValue1();
-            keyPassesForEncryptionBuilder.append(alias).append(",").append(keyPass).append(";");
+            keyPassesForEncryptionBuilder.append(alias).append("&").append(keyPass).append("^");
         }
-        String forEncryption = JKSPassBasic + ":" + JKSPassPrivateKeys + ":"+keyPassesForEncryptionBuilder.toString();
+        String forEncryption = JKSPassBasic + "*" + JKSPassPrivateKeys + "*"+keyPassesForEncryptionBuilder.toString();
 
         forEncryption = forEncryption.substring(0, forEncryption.length() - 1);
 
@@ -74,6 +73,7 @@ public class PEMService {
 
         BufferedWriter writer = new BufferedWriter(new FileWriter(PEM_FILE_PATH));
         writer.write(encryptedData);
+        writer.close();
         System.out.println("Encrypted data successfully written to file.");
     }
 
@@ -92,7 +92,7 @@ public class PEMService {
 
         // Decrypt the encrypted data
         String decryptedData =  decryptPEM(encryptedData);
-        return decryptedData.split(":");
+        return decryptedData.split("[*]");
     }
 
     public void writeToPEM(boolean firstKeyPass, String alias, String newKeyPass, String newKeyPassBasic, String newKeyPassPrivateKeys) throws NoSuchPaddingException, IllegalBlockSizeException, IOException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
@@ -112,9 +112,9 @@ public class PEMService {
     private static List<Pair<String, String>> convertStringToPairs(String pairString) {
         //will take string that loadPEM() gives and then will turn it into List of pair<alias, KeyPass>
         List<Pair<String, String>> PEMKeyPasses = new ArrayList<>();
-        String[] pairs = pairString.split(";");
+        String[] pairs = pairString.split("\\^");
         for (String pair : pairs) {
-            PEMKeyPasses.add(new Pair<>(pair.split(",")[0], pair.split(",")[1]));
+            PEMKeyPasses.add(new Pair<>(pair.split("&")[0], pair.split("&")[1]));
         }
         return PEMKeyPasses;
     }

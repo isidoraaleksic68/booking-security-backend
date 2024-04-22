@@ -3,6 +3,7 @@ package pki.backend.com.example.PKI.Service;
 import com.sun.security.auth.module.NTSystem;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ComponentScan;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;

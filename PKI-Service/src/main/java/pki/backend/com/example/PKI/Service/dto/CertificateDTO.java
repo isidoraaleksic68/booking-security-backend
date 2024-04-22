@@ -4,9 +4,11 @@ package pki.backend.com.example.PKI.Service.dto;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import pki.backend.com.example.PKI.Service.model.MyCertificate;
 import pki.backend.com.example.PKI.Service.service.CertificateUtils;
 
+import java.security.cert.Extension;
 import java.security.cert.X509Certificate;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -46,13 +48,23 @@ public class CertificateDTO {
         this.startDate = certificate.getX509Certificate().getNotBefore().toString();
         this.endDate = certificate.getX509Certificate().getNotAfter().toString();
         this.subject = certificate.getAlias();
-        this.issuer = certificate.getX509Certificate().getIssuerX500Principal().getName("AL");
+        this.issuer = parseDN(certificate.getX509Certificate().getIssuerX500Principal().getName(),"L");
         this.commonName = certificate.getX509Certificate().getSubjectX500Principal().getName();
-        this.isRevoked = CertificateUtils.byteArrayToBoolean(certificate.getX509Certificate().getExtensionValue("isRevoked"));
+        this.isRevoked = CertificateUtils.byteArrayToBoolean(certificate.getX509Certificate().getExtensionValue("1.2.3.4.1"));
 
 
     }
 
+    private String parseDN(String dn, String attribute) {
+        String[] parts = dn.split(",");
+        for (String part : parts) {
+            String[] keyValue = part.split("=");
+            if (keyValue.length == 2 && keyValue[0].trim().equalsIgnoreCase(attribute)) {
+                return keyValue[1].trim();
+            }
+        }
+        return null; // Attribute not found
+    }
 
 ///---------------------------------------------------------------------
 //    private BigInteger serialNumber;

@@ -2,6 +2,7 @@ package pki.backend.com.example.PKI.Service.service;
 
 import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import pki.backend.com.example.PKI.Service.keystore.KeyStoreReader;
 import pki.backend.com.example.PKI.Service.keystore.KeyStoreWriter;
@@ -14,6 +15,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.cert.X509Certificate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @NoArgsConstructor
@@ -33,22 +35,42 @@ public class KeyStoreService {
 
     //needs to save 'alias-certificate' in basic KeyStore and 'alias-private key of newly saved certificate'
     //in PK KeyStore [Private Key Key Store]
-    public void saveRootCertificate(String alias, X509Certificate certificate, PrivateKey privateKey) throws Exception {
-        String basicKeyStorePassword = pemService.getBasicKeyStorePassword();
-        String PKKeyStorePassword = pemService.getPrivateKeysKeyStorePassword();
+    public void saveRootCertificate(boolean first, String alias, X509Certificate certificate, PrivateKey privateKey) throws Exception {
+        String basicKeyStorePassword = null;
+        String PKKeyStorePassword = null;
+        String newKeyPass;
+        if (first){
+            basicKeyStorePassword = "nov" + LocalDateTime.now().toString() + "basickeystorepassword";
+            PKKeyStorePassword = "nov" + LocalDateTime.now().toString() + "privatekeystorepassword";
 
-        //write new certificate
-        keyStoreWriter.loadKeyStore(BASIC_KEYSTORE_PATH, basicKeyStorePassword.toCharArray());
-        keyStoreWriter.writeCertificate(alias, certificate);
-        keyStoreWriter.saveKeyStore(BASIC_KEYSTORE_PATH, basicKeyStorePassword.toCharArray());
+            //write new certificate
+            keyStoreWriter.loadKeyStore(null, basicKeyStorePassword.toCharArray());
+            keyStoreWriter.writeCertificate(alias, certificate);
+            keyStoreWriter.saveKeyStore(BASIC_KEYSTORE_PATH, basicKeyStorePassword.toCharArray());
 
-        //write private key of newly written certificate
-        keyStoreWriter.loadKeyStore(PRIVATE_KEY_KEYSTORE_PATH, PKKeyStorePassword.toCharArray());
-        String newKeyPass = keyStoreWriter.writePrivateKey(alias, privateKey);
-        keyStoreWriter.saveKeyStore(PRIVATE_KEY_KEYSTORE_PATH, PKKeyStorePassword.toCharArray());
+            //write private key of newly written certificate
+            keyStoreWriter.loadKeyStore(null, PKKeyStorePassword.toCharArray());
+            newKeyPass = keyStoreWriter.writePrivateKey(alias, privateKey);
+            keyStoreWriter.saveKeyStore(PRIVATE_KEY_KEYSTORE_PATH, PKKeyStorePassword.toCharArray());
+        }
+        else {
+            basicKeyStorePassword = pemService.getBasicKeyStorePassword();
+            PKKeyStorePassword = pemService.getPrivateKeysKeyStorePassword();
+
+            //write new certificate
+            keyStoreWriter.loadKeyStore(BASIC_KEYSTORE_PATH, basicKeyStorePassword.toCharArray());
+            keyStoreWriter.writeCertificate(alias, certificate);
+            keyStoreWriter.saveKeyStore(BASIC_KEYSTORE_PATH, basicKeyStorePassword.toCharArray());
+
+            //write private key of newly written certificate
+            keyStoreWriter.loadKeyStore(PRIVATE_KEY_KEYSTORE_PATH, PKKeyStorePassword.toCharArray());
+            newKeyPass = keyStoreWriter.writePrivateKey(alias, privateKey);
+            keyStoreWriter.saveKeyStore(PRIVATE_KEY_KEYSTORE_PATH, PKKeyStorePassword.toCharArray());
+        }
 
         //write KeyPass for private key of newly written certificate
-        pemService.writeToPEM(false, alias, newKeyPass, basicKeyStorePassword, PKKeyStorePassword);
+
+        pemService.writeToPEM(first, alias, newKeyPass, basicKeyStorePassword, PKKeyStorePassword);
     }
 
     //this one does not need to save private key, because it will generate new pair of keys every time it is needed,

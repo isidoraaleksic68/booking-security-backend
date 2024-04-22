@@ -1,16 +1,22 @@
 package pki.backend.com.example.PKI.Service.keystore;
 
+import org.bouncycastle.x509.X509V3CertificateGenerator;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
+import javax.security.auth.x500.X500Principal;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.security.*;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 
 @Component
@@ -99,8 +105,28 @@ public class KeyStoreWriter {
     }
 
     public String writePrivateKey(String alias, PrivateKey privateKey) throws Exception {
-        String newKeyPass = "nov:" + LocalDateTime.now().toString() + ":key:" + alias + ":pass";
-        keyStore.setKeyEntry(alias, privateKey, newKeyPass.toCharArray(), null);
+        String newKeyPass = "nov" + LocalDateTime.now().toString() + "key" + alias + "pass";
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+        keyPairGenerator.initialize(2048);
+        KeyPair keyPair = keyPairGenerator.generateKeyPair();
+
+        // Kreiraj prazan sertifikat
+        X509V3CertificateGenerator certGen = new X509V3CertificateGenerator();
+        X500Principal dnName = new X500Principal("CN=Test Certificate");
+        certGen.setSerialNumber(BigInteger.valueOf(System.currentTimeMillis()));
+        certGen.setIssuerDN(dnName);
+        certGen.setNotBefore(new Date());
+        certGen.setNotAfter(new Date(System.currentTimeMillis() + 365 * 24 * 60 * 60 * 1000)); // 1 year validity
+        certGen.setSubjectDN(dnName);
+        certGen.setPublicKey(keyPair.getPublic());
+        certGen.setSignatureAlgorithm("SHA256WithRSAEncryption");
+
+        // Potpiši sertifikat
+        X509Certificate certificate = certGen.generate(keyPair.getPrivate(), "BC");
+
+        Certificate[] temp = new Certificate[1];
+        temp[0] = certificate;
+        keyStore.setKeyEntry(alias, privateKey, newKeyPass.toCharArray(), temp);
         return newKeyPass;
     }
 }

@@ -1,7 +1,13 @@
 package pki.backend.com.example.PKI.Service.service;
 
+import lombok.NoArgsConstructor;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.x509.Extensions;
+import org.bouncycastle.asn1.x509.ExtensionsGenerator;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import pki.backend.com.example.PKI.Service.dto.CertificateDTO;
 import pki.backend.com.example.PKI.Service.dto.RequestDTO;
@@ -9,7 +15,7 @@ import pki.backend.com.example.PKI.Service.dto.RequestDTO;
 import pki.backend.com.example.PKI.Service.model.MyCertificate;
 import pki.backend.com.example.PKI.Service.model.Request;
 import pki.backend.com.example.PKI.Service.repository.RequestRepository;
-
+import org.bouncycastle.asn1.x509.Extension;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
@@ -22,18 +28,24 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
+@NoArgsConstructor
 @Service
 public class CertificateService {
 
     //NOTE: getUser i getAll metode dodate u READER KLASU!
 
     @Autowired
-    RequestRepository requestRepository;
+    private RequestRepository requestRepository;
 
     @Autowired
-    KeyStoreService keyStoreService;
+    private KeyStoreService keyStoreService;
 
+//
+//    @Autowired
+//    public CertificateService(RequestRepository requestRepository, KeyStoreService keyStoreService){
+//        this.keyStoreService = keyStoreService;
+//        this.requestRepository = requestRepository;
+//    }
 
     //TODO: Funkcije za kreirati
     // createRootCert() --> ne treba
@@ -62,7 +74,7 @@ public class CertificateService {
         String issuerOrganisationUnit = issuerX500Principal.getName("OU");
         String issuerCountry = issuerX500Principal.getName("C");
         String issuerName = issuerX500Principal.getName("CN");
-        certGen.setIssuerDN(new X500Principal("CN=" + issuerName + ", O=" + issuerOrganisation + ", OU=" + issuerOrganisationUnit + ", C=" + issuerCountry + ", AL=" + dto.getIssuer()));
+        certGen.setIssuerDN(new X500Principal("CN=" + issuerName + ", O=" + issuerOrganisation + ", OU=" + issuerOrganisationUnit + ", C=" + issuerCountry + ", L=" + dto.getIssuer()));
         KeyPair keyPair = generateKeyPair();
 
         certGen.setSignatureAlgorithm("SHA256WithRSAEncryption");
@@ -81,7 +93,7 @@ public class CertificateService {
         String newCertAlias = CertificateUtils.generateAlias(r.getOrganisationUnit());
 
         if (dto.isCA()) {
-            keyStoreService.saveRootCertificate(newCertAlias, newCert.getX509Certificate(), keyPair.getPrivate());
+            keyStoreService.saveRootCertificate(false,newCertAlias, newCert.getX509Certificate(), keyPair.getPrivate());
         }
         else {
             keyStoreService.saveEndEntityCertificate(newCertAlias, newCert.getX509Certificate());
@@ -121,9 +133,11 @@ public class CertificateService {
     }
 
     public X509Certificate generateRootCertificate() throws Exception {
+        Security.addProvider(new BouncyCastleProvider());
         KeyPair keyPair = generateKeyPair();
         // Set certificate attributes
-        X500Principal issuer = new X500Principal("CN=RootCA");
+        String newCertAlias = CertificateUtils.generateAlias("RootCompanyEnterprise");
+        X500Principal issuer = new X500Principal("CN=RootCA, L=" + newCertAlias);
         X500Principal subject = issuer; // Self-signed, so issuer and subject are the same
         Date startDate = new Date(System.currentTimeMillis());
         Date endDate = new Date(System.currentTimeMillis() + 365 * 24 * 60 * 60 * 1000); // Valid for 1 year
@@ -139,13 +153,41 @@ public class CertificateService {
         certGen.setPublicKey(keyPair.getPublic());
         certGen.setSignatureAlgorithm("SHA256WithRSAEncryption");
 
+        ExtensionsGenerator extGen = new ExtensionsGenerator();
+        ASN1ObjectIdentifier customExtensionOID = new ASN1ObjectIdentifier("1.2.3.4.1");
+        byte[] extensionValue = CertificateUtils.booleanToByteArray(false);
+        extGen.addExtension(customExtensionOID, true, extensionValue);
+
+        ASN1ObjectIdentifier customExtensionOIDCA = new ASN1ObjectIdentifier("1.2.3.4.2");
+        byte[] extensionValueTrue = CertificateUtils.booleanToByteArray(true);
+        extGen.addExtension(customExtensionOIDCA, true, extensionValueTrue);
+
+        ASN1ObjectIdentifier customExtensionOIDDS = new ASN1ObjectIdentifier("1.2.3.4.3");
+        extGen.addExtension(customExtensionOIDDS, true, extensionValue);
+
+        ASN1ObjectIdentifier customExtensionOIDKE = new ASN1ObjectIdentifier("1.2.3.4.4");
+        extGen.addExtension(customExtensionOIDKE, true, extensionValue);
+
+        ASN1ObjectIdentifier customExtensionOIDKCS = new ASN1ObjectIdentifier("1.2.3.4.5");
+        extGen.addExtension(customExtensionOIDKCS, true, extensionValue);
+
+        ASN1ObjectIdentifier customExtensionOIDCRLS = new ASN1ObjectIdentifier("1.2.3.4.6");
+        extGen.addExtension(customExtensionOIDCRLS, true, extensionValue);
+
+        Extensions extensions = extGen.generate();
+
+        certGen.addExtension(customExtensionOID, true, extensions.getExtension(customExtensionOID).getEncoded());
+        certGen.addExtension(customExtensionOIDCA, true, extensions.getExtension(customExtensionOIDCA).getEncoded());
+        certGen.addExtension(customExtensionOIDDS, true, extensions.getExtension(customExtensionOIDDS).getEncoded());
+        certGen.addExtension(customExtensionOIDKE, true, extensions.getExtension(customExtensionOIDKE).getEncoded());
+        certGen.addExtension(customExtensionOIDKCS, true, extensions.getExtension(customExtensionOIDKCS).getEncoded());
+        certGen.addExtension(customExtensionOIDCRLS, true, extensions.getExtension(customExtensionOIDCRLS).getEncoded());
+
         // Sign the certificate
         PrivateKey privateKey = keyPair.getPrivate();
-        X509Certificate cert = certGen.generate(privateKey);
+        X509Certificate cert = certGen.generate(privateKey,"BC");
 
-        String newCertAlias = CertificateUtils.generateAlias("RootCompanyEnterprise");
-
-        keyStoreService.saveRootCertificate(newCertAlias, cert, keyPair.getPrivate());
+        keyStoreService.saveRootCertificate(true,newCertAlias, cert, keyPair.getPrivate());
 
         return cert;
     }
