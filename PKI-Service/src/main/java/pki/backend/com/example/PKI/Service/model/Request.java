@@ -1,9 +1,6 @@
 package pki.backend.com.example.PKI.Service.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -19,9 +16,12 @@ import javax.validation.constraints.NotNull;
 @Setter
 @NoArgsConstructor
 public class Request {
+
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private String id;
+    private Long id;
+
 
     @NotEmpty
     @NotNull
