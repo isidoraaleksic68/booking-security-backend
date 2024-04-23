@@ -9,26 +9,28 @@ import pki.backend.com.example.PKI.Service.model.Request;
 @Setter
 @NoArgsConstructor
 public class RequestDTO {
+    private Long id;
     private String email;
     private String organisation;
     private String organisationUnit;
     private String country;
-    private boolean isCA;
-    private boolean isDS;
-    private boolean isKE;
-    private boolean isKCS;
-    private boolean isCRLS;
+    private boolean ca;
+    private boolean ds;
+    private boolean ke;
+    private boolean kcs;
+    private boolean crls;
 
     public RequestDTO(Request request){
+        this.id = request.getId();
         this.email = request.getEmail();
         this.organisation = request.getOrganisation();
         this.organisationUnit = request.getOrganisationUnit();
         this.country = request.getCountry();
-        this.isCA = request.isCA();
-        this.isDS = request.isDS();
-        this.isKE = request.isKE();
-        this.isKCS = request.isKCS();
-        this.isCRLS = request.isCRLS();
+        this.ca = request.isCA();
+        this.ds = request.isDS();
+        this.ke = request.isKE();
+        this.kcs = request.isKCS();
+        this.crls = request.isCRLS();
     }
 
 }

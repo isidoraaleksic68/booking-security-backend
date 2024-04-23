@@ -77,7 +77,7 @@ public class CertificateService {
         Request request = requestRepository.findById(dto.getRequestId());
         X509Certificate issuer = keyStoreService.getCertificateByAlias(dto.getIssuer());
         CertificateData issuerData = certificateDataRepository.findBySubjectSerialNumber(issuer.getSerialNumber());
-        BigInteger serialNumber = new BigInteger(128, new SecureRandom());
+        BigInteger serialNumber = new BigInteger(64, new SecureRandom());
         // Prepare the X509CertificateBuilder
         X509v3CertificateBuilder certBuilder = new X509v3CertificateBuilder(
                 CertificateUtils.createOrganisation(dto.getCommonName(), request.getOrganisation(),
@@ -99,13 +99,13 @@ public class CertificateService {
         // Build the certificate
         X509Certificate newCert = new JcaX509CertificateConverter().getCertificate(certBuilder.build(contentSigner));
 
-        if (dto.isCA()){
+        if (dto.isCa()){
             keyStoreService.saveRootCertificate(false, alias, newCert, keyPair.getPrivate());
         } else {
             keyStoreService.saveEndEntityCertificate(alias, newCert);
         }
         CertificateData dataAboutSert = new CertificateData(alias, issuerData.getSubjectAlias(), serialNumber,
-                dto.isCA(), dto.isDS(), dto.isKE(), dto.isKCS(), dto.isCRLS(), false);
+                dto.isCa(), dto.isDs(), dto.isKe(), dto.isKcs(), dto.isCrls(), false);
         certificateDataRepository.save(dataAboutSert);
         return newCert;
     }
@@ -146,7 +146,7 @@ public class CertificateService {
 
     public X509Certificate generateRootCertificate() throws Exception {
         KeyPair keyPair = generateKeyPair();
-        BigInteger serialNumber = new BigInteger(128, new SecureRandom());
+        BigInteger serialNumber = new BigInteger(64, new SecureRandom());
 
         X509v3CertificateBuilder certBuilder = new X509v3CertificateBuilder(
                 CertificateUtils.createOrganisation("Root CA", "My Root organisation enterprise",
@@ -180,8 +180,8 @@ public class CertificateService {
         certBuilder.addExtension(Extension.keyUsage, true, roleUsage);
         certBuilder.addExtension(Extension.basicConstraints, true, basicConstraints);
 
-        String alias = CertificateUtils.generateAlias("My Root organisation enterprise");
-
+        String alias = CertificateUtils.generateAlias("my root organisation enterprise");
+        System.out.println("ROOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOTALIAS:        " + alias);
         // Create a ContentSigner to sign the certificate
         ContentSigner contentSigner = new JcaContentSignerBuilder("SHA256withRSA").build(keyPair.getPrivate());
 
@@ -195,25 +195,25 @@ public class CertificateService {
     }
 
     public void addExtensionsToCertificate(X509v3CertificateBuilder  builder, CertificateDTO certificateDTO, PublicKey subjectPublicKey) throws NoSuchPaddingException, IllegalBlockSizeException, IOException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
-        BasicConstraints basicConstraints = new BasicConstraints(certificateDTO.isCA());
+        BasicConstraints basicConstraints = new BasicConstraints(certificateDTO.isCa());
 
-        if (certificateDTO.isCA()){
+        if (certificateDTO.isCa()){
             AuthorityKeyIdentifier a = new AuthorityKeyIdentifier(keyStoreService.getCertificateByAlias(certificateDTO.getIssuer()).getPublicKey().getEncoded());
             builder.addExtension(Extension.authorityKeyIdentifier, false, a);
         }
 
-        if (!certificateDTO.isCA()){
+        if (!certificateDTO.isCa()){
             GeneralName san = new GeneralName(GeneralName.dNSName, requestRepository.findById(certificateDTO.getRequestId()).getOrganisation());
             GeneralNames sanNames = new GeneralNames(san);
             builder.addExtension(org.bouncycastle.asn1.x509.Extension.subjectAlternativeName, false, sanNames);
         }
 
         boolean[] certificateRole = new boolean[5];
-        certificateRole[0] = certificateDTO.isCA();
-        certificateRole[1] = certificateDTO.isDS();
-        certificateRole[2] = certificateDTO.isKCS();
-        certificateRole[3] = certificateDTO.isKE();
-        certificateRole[4] = certificateDTO.isCRLS();
+        certificateRole[0] = certificateDTO.isCa();
+        certificateRole[1] = certificateDTO.isDs();
+        certificateRole[2] = certificateDTO.isKcs();
+        certificateRole[3] = certificateDTO.isKe();
+        certificateRole[4] = certificateDTO.isCrls();
 
         int roleValue = 0;
         for (int i = 0; i < certificateRole.length; i++) {

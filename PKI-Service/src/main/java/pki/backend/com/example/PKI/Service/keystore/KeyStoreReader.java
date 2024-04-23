@@ -88,9 +88,10 @@ public class KeyStoreReader {
             //ucitavamo podatke
             BufferedInputStream in = new BufferedInputStream(new FileInputStream(keyStoreFile));
             ks.load(in, keyStorePass.toCharArray());
-
+            System.out.println("ALIASSSSSSSSSSSSSSSSSSSSSSS NMG " + alias);
             if(ks.isKeyEntry(alias)) {
                 Certificate cert = ks.getCertificate(alias);
+                System.out.println("SERTIFIKAT U KEYSTORE READERU:     " + cert );
                 if (cert instanceof X509Certificate) {
                     return (X509Certificate) cert;
                 } else {
@@ -98,6 +99,7 @@ public class KeyStoreReader {
                     return null;
                 }
             }else{
+                System.out.println("nulic");
                 return null;
             }
         } catch (KeyStoreException e) {
@@ -232,6 +234,7 @@ public class KeyStoreReader {
             Enumeration<String> aliases = ks.aliases();
             while (aliases.hasMoreElements()) {
                 String alias = aliases.nextElement();
+                System.out.println("POSTOJECI ALIAS IZ BAZE                            " + alias);
                 Certificate cert = ks.getCertificate(alias);
                 if (cert instanceof X509Certificate) {
                     X509Certificate x509 = ((X509Certificate) cert);
