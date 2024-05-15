@@ -54,6 +54,7 @@ public class CertificateController {
         return new ResponseEntity<>(certificateDtos, HttpStatus.OK);
     }
 
+
     @GetMapping(value = "/request/all", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<RequestDTO>> getAllRequests() throws NoSuchPaddingException, IllegalBlockSizeException, IOException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
 

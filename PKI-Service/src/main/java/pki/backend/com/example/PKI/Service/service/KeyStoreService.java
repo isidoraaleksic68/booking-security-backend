@@ -88,6 +88,7 @@ public class KeyStoreService {
     //get cert based on alias
     public X509Certificate getCertificateByAlias(String alias) throws IOException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
         String basicKeyStorePassword = pemService.getBasicKeyStorePassword();
+        System.out.println("BASIC KEY STORE PASSWORD                        " + basicKeyStorePassword);
         return keyStoreReader.readCertificate(BASIC_KEYSTORE_PATH, basicKeyStorePassword, alias);
     }
 

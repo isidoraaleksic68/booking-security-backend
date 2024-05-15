@@ -26,7 +26,7 @@ public class CertificateData {
     @Column(name = "subjectAlias")
     private String subjectAlias;
 
-    @Column(name = "subjectSerialNumber")
+    @Column(name = "subjectSerialNumber", columnDefinition = "DECIMAL")
     private BigInteger subjectSerialNumber;
 
     @Column(name = "isRevoked")

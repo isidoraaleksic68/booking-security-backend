@@ -73,10 +73,10 @@ public class Request {
         this.organisation = dto.getOrganisation();
         this.organisationUnit = dto.getOrganisationUnit();
         this.country = dto.getCountry();
-        this.isCA = dto.isCA();
-        this.isDS = dto.isDS();
-        this.isKE = dto.isKE();
-        this.isKCS = dto.isKCS();
-        this.isCRLS = dto.isCRLS();
+        this.isCA = dto.isCa();
+        this.isDS = dto.isDs();
+        this.isKE = dto.isKe();
+        this.isKCS = dto.isKcs();
+        this.isCRLS = dto.isCrls();
     }
 }

@@ -22,28 +22,28 @@ public class CertificateDTO {
     private String issuer;  //predstavljace issuer alias!
     private String startDate;
     private String endDate;
-    private String subject; //cn od subjecta
+//    private String subject; //cn od subjecta
     private String alias;   //ovo je nullable jer kad jos nije generisano je NULL!
     private String commonName;
     private boolean isRevoked;
-    private boolean isCA;
-    private boolean isDS;
-    private boolean isKE;
-    private boolean isKCS;
-    private boolean isCRLS;
+    private boolean ca;
+    private boolean ds;
+    private boolean ke;
+    private boolean kcs;
+    private boolean crls;
 
     public CertificateDTO(MyCertificate certificate, CertificateData certificateData){
         this.issuer = certificateData.getIssuerAlias();
         this.startDate = certificate.getX509Certificate().getNotBefore().toString();
         this.endDate = certificate.getX509Certificate().getNotAfter().toString();
-        this.subject = certificate.getX509Certificate().getSubjectDN().getName();
+        this.commonName = certificate.getX509Certificate().getSubjectDN().getName();
         this.alias = certificate.getAlias();
         this.isRevoked = certificateData.getIsRevoked();
-        this.isCA = certificateData.getIsCA();
-        this.isDS = certificateData.getIsDS();
-        this.isKE = certificateData.getIsKE();
-        this.isKCS = certificateData.getIsKCS();
-        this.isCRLS = certificateData.getIsCRLS();
+        this.ca = certificateData.getIsCA();
+        this.ds = certificateData.getIsDS();
+        this.ke = certificateData.getIsKE();
+        this.kcs = certificateData.getIsKCS();
+        this.crls = certificateData.getIsCRLS();
     }
 
     public Date transformToDate(String dateStr){

@@ -99,6 +99,7 @@ public class KeyStoreWriter {
 
     public void writeCertificate(String alias, Certificate certificate) throws Exception {
         try {
+            System.out.println("ALIAAAS IZ FUNKCIJE                                  " + alias);
             keyStore.setCertificateEntry(alias, certificate);
         } catch (Exception e) {
             throw new Exception("Failed to write certificate to KeyStore", e);
