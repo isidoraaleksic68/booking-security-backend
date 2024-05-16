@@ -180,7 +180,7 @@ public class CertificateService {
         certBuilder.addExtension(Extension.keyUsage, true, roleUsage);
         certBuilder.addExtension(Extension.basicConstraints, true, basicConstraints);
 
-        String alias = CertificateUtils.generateAlias("My Root organisation enterprise");
+        String alias = CertificateUtils.generateAlias("my root organisation enterprise");
 
         // Create a ContentSigner to sign the certificate
         ContentSigner contentSigner = new JcaContentSignerBuilder("SHA256withRSA").build(keyPair.getPrivate());
